@@ -23,7 +23,7 @@ def mnist_model():
         nn.Conv2d(16, 32, 4, stride=2, padding=1),
         nn.ReLU(),
         Flatten(),
-        nn.Linear(32*7*7,100),
+        nn.Linear(32*7*7, 100),
         nn.ReLU(),
         nn.Linear(100, 10)
     )
@@ -91,7 +91,7 @@ C.scatter_(dim=2, index=groundtruth, value=1.0)
 C.scatter_(dim=2, index=target_label, value=-1.0)
 print('Computing bounds with a specification matrix:\n', C)
 
-for method in ['IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)', 'CROWN-Optimized (alpha-CROWN)']:
+for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)', 'CROWN-Optimized (alpha-CROWN)']:
     print("Bounding method:", method)
     if 'Optimized' in method:
         # For optimized bound, you can change the number of iterations, learning rate, etc here. Also you can increase verbosity to see per-iteration loss values.

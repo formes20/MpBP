@@ -1324,7 +1324,7 @@ class BoundedModule(nn.Module):
         print('optimal alpha/beta time:', time.time() - start)
         return best_ret
 
-    # Line 1327 - 1680 (compute_bounds): compute bounds in each gradient decrease iteration
+    # Line 1327 - 1680 (compute_bounds): main method
     def compute_bounds(self, x=None, aux=None, C=None, method='backward', IBP=False, forward=False, 
                        bound_lower=True, bound_upper=True, reuse_ibp=False,
                        return_A=False, needed_A_list=None, final_node_name=None, average_A=False, new_interval=None,
@@ -1441,9 +1441,9 @@ class BoundedModule(nn.Module):
                 if self.ibp_relative:
                     root[i].interval = Interval(
                         None, None, 
-                        value, torch.zeros_like(value), torch.zeros_like(value))                    
+                        value, torch.zeros_like(value), torch.zeros_like(value))
                 else:
-                    # This inpute/parameter does not has perturbation. 
+                    # This input/parameter does not has perturbation.
                     # Use plain tuple defaulting to Linf perturbation.
                     root[i].interval = (value, value)
                     root[i].forward_value = root[i].forward_value = root[i].value = root[i].lower = root[i].upper = value
@@ -1680,7 +1680,7 @@ class BoundedModule(nn.Module):
         else:
             raise NotImplementedError
 
-    # Line 1683 - 2228: about robust training
+    # Line 1683 - 2228:
     """ improvement on merging BoundLinear, BoundGatherElements and BoundSub
     when loss fusion is used in training"""
 

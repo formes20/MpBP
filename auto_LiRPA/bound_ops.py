@@ -699,6 +699,7 @@ class BoundBuffers(BoundInput):
         return self.buffer
 
 
+# TODO: START HERE
 class BoundLinear(Bound):
     def __init__(self, input_name, name, ori_name, attr, inputs, output_index, options, device):
         # Gemm:
@@ -2164,7 +2165,8 @@ class BoundRelu(BoundOptimizableActivation):
     def __init__(self, input_name, name, ori_name, attr, inputs, output_index, options, device):
         super().__init__(input_name, name, ori_name, attr, inputs, output_index, options, device)
         self.options = options
-        self.relu_options = options.get('relu', 'adaptive')
+        # self.relu_options = options.get('relu', 'adaptive')
+        self.relu_options = options.get('relu', 'zero-lb')
         self.beta = self.beta_mask = self.masked_beta = self.sparse_beta = None
         self.split_beta_used = False
         self.history_beta_used = False
@@ -2196,11 +2198,10 @@ class BoundRelu(BoundOptimizableActivation):
             self.flattened_nodes = x[0].reshape(-1).shape[0]
         return F.relu(x)
 
-    # Linear relaxation for nonlinear functions
-    # Used for forward mode bound propagation
     def bound_relax(self, x):
         # FIXME maybe avoid using `mask` which looks inefficient
         # m = torch.min((x.lower + x.upper) / 2, x.lower + 0.99)
+        # For determined alpha
         self._add_linear(mask=self.mask_neg, type='lower',
                          k=torch.zeros_like(x.lower), x0=0, y0=0)
         self._add_linear(mask=self.mask_neg, type='upper',
@@ -2210,6 +2211,7 @@ class BoundRelu(BoundOptimizableActivation):
         self._add_linear(mask=self.mask_pos, type='upper',
                          k=torch.ones_like(x.lower), x0=0, y0=0)
         upper = torch.max(x.upper, x.lower + 1e-8)
+        # For undetermined alpha
         delta = 1e-8
         r = (x.upper - x.lower).clamp(min=delta)
         upper_k = x.upper / r + delta / r

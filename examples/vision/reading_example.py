@@ -2,7 +2,6 @@ import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision
 from auto_LiRPA import BoundedModule, BoundedTensor
 from auto_LiRPA.perturbations import PerturbationLpNorm
 
@@ -17,7 +16,6 @@ class exampleNet(nn.Module):
     def forward(self, x):
         x = F.relu(self.linear1(x))
         x = F.relu(self.linear2(x))
-
         x = self.linear3(x)
         return x
 
@@ -27,7 +25,7 @@ model = exampleNet()
 checkpoint = torch.load(os.path.join(os.path.dirname(__file__), "pretrain/example_net.pth"), map_location=torch.device('cpu'))
 model.load_state_dict(checkpoint)
 
-reading_input = torch.Tensor([[0., 1.], [0., 0.], [1., 0.]])
+reading_input = torch.Tensor([[0., 1.]])
 if torch.cuda.is_available():
     reading_input = reading_input.cuda()
     model = model.cuda()
@@ -46,7 +44,7 @@ reading_input = BoundedTensor(reading_input, ptb)
 
 # Compute bounds for final output
 # for method in ['IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)', 'CROWN-Optimized (alpha-CROWN)']:
-for method in ['IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)', ]:
+for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)']:
     print("Bounding method:", method)
     lb, ub = lirpa_model.compute_bounds(x=(reading_input,), method=method.split()[0])
     print(lb, ub)
