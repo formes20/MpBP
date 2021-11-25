@@ -60,7 +60,7 @@ class Perturbation:
 
             center (Tensor): Center of perturbation. It can simply be `x`, or some other value.
 
-            aux (object, optional): Auxilary information. Bound initialization may modify or add auxilary information.
+            aux (object, optional): Auxilary information. Bound initialization may modify or add auxiliary information.
         """
 
         raise NotImplementedError

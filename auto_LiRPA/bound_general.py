@@ -333,6 +333,7 @@ class BoundedModule(nn.Module):
                     queue.append(node_next)
         return
 
+    # Clear existed interval and set new. Used for input layer
     def _clear_and_set_new(self, new_interval):
         for l in self._modules.values():
             if hasattr(l, 'linear'):

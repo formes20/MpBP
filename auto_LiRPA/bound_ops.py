@@ -28,7 +28,7 @@ def not_implemented_op(node, func):
     raise NotImplementedError(message)
 
 
-"""Interval object. Used for interval bound propagation."""
+"""Interval object for nodes"""
 class Interval(tuple):
     # Subclassing tuple object so that all previous code can be reused.
     def __new__(self, lb=None, ub=None, nominal=None, lower_offset=None, upper_offset=None, ptb=None):
@@ -1910,7 +1910,6 @@ class BoundPad(Bound):
 class BoundActivation(Bound):
     def __init__(self, input_name, name, ori_name, attr, inputs, output_index, options, device):
         super().__init__(input_name, name, ori_name, attr, inputs, output_index, options, device)
-        # New attributes, indicate whether a node is nonlinear and be relaxed.
         self.nonlinear = True
         self.relaxed = False
 
@@ -1922,13 +1921,11 @@ class BoundActivation(Bound):
 
     def _init_linear(self, x, dim_opt=None):
         self._init_masks(x)
-        # lw: lower weight matrix
         self.lw = torch.zeros_like(x.lower)
         self.lb = self.lw.clone()
         self.uw = self.lw.clone()
         self.ub = self.lw.clone()
 
-    # TODO: meaning?
     def _add_linear(self, mask, type, k, x0, y0):
         """
         Linearization.
