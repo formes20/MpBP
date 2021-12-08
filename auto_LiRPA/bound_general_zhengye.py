@@ -7,11 +7,11 @@ import torch
 import torch.optim as optim
 from torch.nn import DataParallel, Parameter, parameter
 
-from auto_LiRPA.bound_op_map import bound_op_map
-from auto_LiRPA.bound_ops import *
+from auto_LiRPA.bound_op_map_zhengye import bound_op_map
+from auto_LiRPA.bound_ops_zhengye import *
 from auto_LiRPA.bounded_tensor import BoundedTensor, BoundedParameter
 from auto_LiRPA.parse_graph import parse_module
-from auto_LiRPA.perturbations import *
+from auto_LiRPA.perturbations_zhengye import *
 from auto_LiRPA.utils import *
 from auto_LiRPA.adam_element_lr import AdamElementLR
 
@@ -333,7 +333,7 @@ class BoundedModule(nn.Module):
                     queue.append(node_next)
         return
 
-    # Clear existed interval and set new
+    # Clear existed bounds and set new
     def _clear_and_set_new(self, new_interval):
         for l in self._modules.values():
             if hasattr(l, 'linear'):
@@ -1436,7 +1436,7 @@ class BoundedModule(nn.Module):
                     root[i].interval = \
                         Interval(root[i].linear.lower, root[i].linear.upper, ptb=root[i].perturbation)
                 if forward:
-                    root[i].dim = root[i].linear.lw.shape[1]
+                    root[i].dim = root[i].linear.lw.shape[2]
                     dim_in += root[i].dim
             else:
                 if self.ibp_relative:
@@ -1476,7 +1476,7 @@ class BoundedModule(nn.Module):
             if final.output_shape is None:
                 raise ValueError('C is not provided while node {} has no default shape'.format(final.shape))
             dim_output = int(np.prod(final.output_shape[1:]))
-            C = torch.eye(dim_output, device=self.device).unsqueeze(0).repeat(batch_size, 1, 1)  # TODO: use an eyeC object here.
+            C = torch.eye(dim_output, device=self.device).unsqueeze(0).unsqueeze(1).repeat(batch_size, 3, 1, 1)  # TODO: use an eyeC object here.
 
         # check whether weights are perturbed and set nonlinear for the BoundMatMul operation
         for n in self._modules.values():
@@ -1586,7 +1586,7 @@ class BoundedModule(nn.Module):
                                                 newC = eyeC([batch_size, dim, *node.output_shape[1:]], self.device)
                                             """
                                         else:
-                                            newC = eyeC([batch_size, dim, *node.output_shape[1:]], self.device)
+                                            newC = eyeC([batch_size, 3, dim, *node.output_shape[1:]], self.device)
                                     elif (isinstance(node, BoundConv) or isinstance(node,
                                                                                     BoundBatchNormalization)) and node.mode == "patches":
                                         # import pdb; pdb.set_trace()
@@ -1625,13 +1625,14 @@ class BoundedModule(nn.Module):
                                             if dim > 1000:
                                                 warnings.warn(f"Creating an identity matrix with size {dim}x{dim} for node {node}. This may indicate poor performance for bound computation. If you see this message on a small network please submit a bug report.", stacklevel=2)
                                             newC = torch.eye(dim, device=self.device) \
-                                                .unsqueeze(0).repeat(batch_size, 1, 1) \
-                                                .view(batch_size, dim, *node.output_shape[1:])
+                                                .unsqueeze(0).unsqueeze(1).repeat(batch_size, 3, 1, 1) \
+                                                .view(batch_size, 3, dim, *node.output_shape[1:])
                                     # print('Creating new C', type(newC), 'for', node)
                                     if False:  # TODO: only return A_dict of final layer
                                         _, _, A_dict = self._backward_general(C=newC, node=node, root=root,
                                                                               return_A=return_A, A_dict=A_dict, intermedaite_constr=intermediate_constr)
                                     else:
+                                        # Bound intermediate nodes.
                                         self._backward_general(C=newC, node=node, root=root, return_A=False, intermediate_constr=intermediate_constr, unstable_idx=unstable_idx)
 
                                     if reduced_dim:
@@ -1671,6 +1672,7 @@ class BoundedModule(nn.Module):
                                             node.upper[update_upper] = reference_bounds[node.name][1][update_upper]
                                             """
 
+        # Bound final layer nodes.
         if method == 'backward':
             # This is for the final output bound. No need to pass in intermediate layer beta constraints.
             return self._backward_general(C=C, node=final, root=root, bound_lower=bound_lower, bound_upper=bound_upper,
@@ -1781,9 +1783,11 @@ class BoundedModule(nn.Module):
         print('Backward from ({})[{}]'.format(node, node.name))
         _print_time = False
 
+        # Paper page 16, A.3, GetOutDegree for every node before the final `node`.
         degree_out = {}
         for l in self._modules.values():
             l.bounded = True
+            # Clear lA and uA for layers.
             l.lA = l.uA = None
             degree_out[l.name] = 0
         queue = deque([node])
@@ -1802,12 +1806,12 @@ class BoundedModule(nn.Module):
             batch_size, L, out_c = C.shape[:3]
             output_dim = L * out_c
         else:
-            batch_size, output_dim = C.shape[:2]
+            batch_size, output_dim = C.shape[0], C.shape[2]
             
         if not isinstance(C, (eyeC, Patches, OneHotC)):
-            C = C.transpose(0, 1)
+            C = C.transpose(1, 2).transpose(0, 1)
         elif isinstance(C, (eyeC, OneHotC)):
-            C = C._replace(shape=(C.shape[1], C.shape[0], C.shape[2]))
+            C = C._replace(shape=(C.shape[2], C.shape[0], C.shape[1], C.shape[3]))
 
         node.lA = C if bound_lower else None
         node.uA = C if bound_upper else None
@@ -1828,7 +1832,7 @@ class BoundedModule(nn.Module):
         queue = deque([node])
         A_record = {}
         while len(queue) > 0:
-            l = queue.popleft()  # Backward from l.
+            l = queue.popleft()  # backward from l
             l.bounded = True
 
             if return_b:
@@ -1839,8 +1843,9 @@ class BoundedModule(nn.Module):
 
             if l.name in self.root_name or l == root: continue
 
-            for l_pre in l.input_name:  # if all the succeeds are done, then we can turn to this node in the next iteration.
+            for l_pre in l.input_name:
                 _l = self._modules[l_pre]
+                # if all the succeeds are done, then we can turn to this node in the next iteration.
                 degree_out[l_pre] -= 1
                 if degree_out[l_pre] == 0:
                     queue.append(_l)
@@ -2043,11 +2048,11 @@ class BoundedModule(nn.Module):
                     _l = self._modules[l_pre]
                     add_bound(_l, lA=A[i][0], uA=A[i][1])
 
+        # Transpose lb size to (batch_size, path_num, output_dim, ...)
         if lb.ndim >= 2:
-            lb = lb.transpose(0, 1)
+            lb = lb.transpose(0, 1).transpose(1, 2)
         if ub.ndim >= 2:
-            ub = ub.transpose(0, 1)
-        print('after len(queue):', lb, ub)
+            ub = ub.transpose(0, 1).transpose(1, 2)
         output_shape = node.output_shape[1:]
         if np.prod(node.output_shape[1:]) != output_dim and type(C) != Patches:
             output_shape = [-1]
@@ -2076,9 +2081,9 @@ class BoundedModule(nn.Module):
                 uA = root[i].uA
                     
             if not isinstance(root[i].lA, eyeC) and not isinstance(root[i].lA, Patches):
-                lA = root[i].lA.reshape(output_dim, batch_size, -1).transpose(0, 1) if bound_lower else None
+                lA = root[i].lA.reshape(output_dim, batch_size, 3, -1).transpose(0, 1).transpose(1, 2) if bound_lower else None
             if not isinstance(root[i].uA, eyeC) and not isinstance(root[i].lA, Patches):
-                uA = root[i].uA.reshape(output_dim, batch_size, -1).transpose(0, 1) if bound_upper else None
+                uA = root[i].uA.reshape(output_dim, batch_size, 3, -1).transpose(0, 1).transpose(1, 2) if bound_upper else None
             if hasattr(root[i], 'perturbation') and root[i].perturbation is not None:
                 if isinstance(root[i], BoundParams):
                     # add batch_size dim for weights node
@@ -2093,7 +2098,6 @@ class BoundedModule(nn.Module):
                                                               aux=root[i].aux) if bound_lower else None
                     ub = ub + root[i].perturbation.concretize(root[i].center, uA, sign=+1,
                                                               aux=root[i].aux) if bound_upper else None
-                    print('concretizing...', lb, ub)
             # FIXME to simplify
             elif i < self.num_global_inputs:
                 if not isinstance(lA, eyeC):
@@ -2114,8 +2118,16 @@ class BoundedModule(nn.Module):
                     ub = ub + root[i].forward_value.view(1, -1) if bound_upper else None
                 else:
                     ub = ub + uA.matmul(root[i].forward_value.view(-1, 1)).squeeze(-1) if bound_upper else None
-        node.lower = lb.view(batch_size, *output_shape) if bound_lower else None
-        node.upper = ub.view(batch_size, *output_shape) if bound_upper else None
+        # So lb is lower bound rather lower bias.
+        if bound_lower:
+            node.lower = lb.view(batch_size, 3, *output_shape).max(1)[0].squeeze(1)
+        else:
+            node.lower = None
+
+        if bound_upper:
+            node.upper = ub.view(batch_size, 3, *output_shape).min(1)[0].squeeze(1)
+        else:
+            node.upper = None
 
         if return_A: return node.lower, node.upper, A_dict
         return node.lower, node.upper
@@ -2173,8 +2185,8 @@ class BoundedModule(nn.Module):
                 prev_dim_in = 0
                 batch_size = lw.shape[0]
                 assert (lw.ndim > 1)
-                lA = lw.reshape(batch_size, dim_in, -1).transpose(1, 2)
-                uA = uw.reshape(batch_size, dim_in, -1).transpose(1, 2)
+                lA = lw.reshape(batch_size, 3, dim_in, -1).transpose(2, 3)
+                uA = uw.reshape(batch_size, 3, dim_in, -1).transpose(2, 3)
                 for i in range(len(root)):
                     if hasattr(root[i], 'perturbation') and root[i].perturbation is not None:
                         _lA = lA[:, :, prev_dim_in : (prev_dim_in + root[i].dim)]
@@ -2183,15 +2195,17 @@ class BoundedModule(nn.Module):
                             root[i].center, _lA, sign=-1, aux=root[i].aux).view(lower.shape)
                         upper = upper + root[i].perturbation.concretize(
                             root[i].center, _uA, sign=+1, aux=root[i].aux).view(upper.shape)
+                        best_lower = torch.max(lower, 1)[0].repeat(1, 3, 1)
+                        best_upper = torch.min(upper, 1)[0].repeat(1, 3, 1)
                         prev_dim_in += root[i].dim
                 if C is None:
-                    node.linear = node.linear._replace(lower=lower, upper=upper)
+                    node.linear = node.linear._replace(lower=best_lower, upper=best_upper)
             if C is None:
-                node.lower, node.upper = lower, upper
+                node.lower, node.upper = best_lower, best_upper
             if not Benchmarking and torch.isnan(lower).any():
                 import pdb
                 pdb.set_trace()
-            return lower, upper
+            return best_lower, best_upper
 
     def _init_forward(self, root, dim_in):
         if dim_in == 0:
@@ -2206,15 +2220,15 @@ class BoundedModule(nn.Module):
                 dtype = root[i].linear.lw.dtype
                 root[i].linear = root[i].linear._replace(
                     lw=torch.cat([
-                        torch.zeros(shape[0], prev_dim_in, *shape[2:], device=device, dtype=dtype),
+                        torch.zeros(shape[0], 3, prev_dim_in, *shape[3:], device=device, dtype=dtype),
                         root[i].linear.lw,
-                        torch.zeros(shape[0], dim_in - shape[1], *shape[2:], device=device, dtype=dtype)
-                    ], dim=1),
+                        torch.zeros(shape[0], 3, dim_in - shape[2], *shape[3:], device=device, dtype=dtype)
+                    ], dim=2),
                     uw=torch.cat([
-                        torch.zeros(shape[0], prev_dim_in, *shape[2:], device=device, dtype=dtype),
+                        torch.zeros(shape[0], 3, prev_dim_in, *shape[3:], device=device, dtype=dtype),
                         root[i].linear.uw,
-                        torch.zeros(shape[0], dim_in - shape[1] - prev_dim_in, *shape[2:], device=device, dtype=dtype)
-                    ], dim=1)
+                        torch.zeros(shape[0], 3, dim_in - shape[2] - prev_dim_in, *shape[3:], device=device, dtype=dtype)
+                    ], dim=2)
                 )
                 if i >= self.num_global_inputs:
                     root[i].forward_value = root[i].forward_value.unsqueeze(0).repeat(
@@ -2232,14 +2246,13 @@ class BoundedModule(nn.Module):
                 root[i].lower = root[i].upper = b
                 root[i].interval = (root[i].lower, root[i].upper)
 
-    # Line 2231 - 2239: see the following comments
     """Add perturbation to an intermediate node and it is treated as an independent 
     node in bound computation."""
 
     def add_intermediate_perturbation(self, node, perturbation):
         node.perturbation = perturbation
         node.perturbed = True
-        # NOTE This change is currently inreversible
+        # NOTE This change is currently irreversible
         if not node.name in self.root_name:
             self.root_name.append(node.name)
 

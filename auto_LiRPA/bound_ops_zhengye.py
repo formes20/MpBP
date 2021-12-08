@@ -12,7 +12,7 @@ from torch.nn import MaxPool2d, \
 import math
 from collections import OrderedDict
 
-from auto_LiRPA.perturbations import Perturbation, PerturbationLpNorm, PerturbationSynonym, PerturbationL0Norm
+from auto_LiRPA.perturbations_zhengye import Perturbation, PerturbationLpNorm, PerturbationSynonym, PerturbationL0Norm
 from auto_LiRPA.utils import eyeC, OneHotC, LinearBound, user_data_dir, isnan, Patches, logger, Benchmarking, prod, batched_index_select, patchesToMatrix, check_padding
 
 torch._C._jit_set_profiling_executor(False)
@@ -366,18 +366,20 @@ class Bound(nn.Module):
             # The shape of A is (output_dim, ...).
             output_dim = A.shape[0]
             if self.batch_dim != -1:
+                # batch_dim locates at the next dimension
                 batch_size = A.shape[self.batch_dim + 1]
                 A_shape = [
                     A.shape[0],
                     np.prod(A.shape[1:self.batch_dim + 1]).astype(np.int32),
                     batch_size,
-                    np.prod(A.shape[self.batch_dim + 2:]).astype(np.int32)
+                    np.prod(A.shape[self.batch_dim + 2:3]).astype(np.int32),
+                    np.prod(A.shape[self.batch_dim + 3:]).astype(np.int32)
                 ]
-                A = A.reshape(*A_shape).permute(2, 0, 1, 3).reshape(batch_size, output_dim, -1)
+                A = A.reshape(*A_shape).permute(2, 3, 0, 1, 4).reshape(batch_size, 3, output_dim, -1)
                 # Now the shape of A is (batch_size, path_num, output_dim, *standard_shape).
-                bias = bias.reshape(*A_shape[1:]).transpose(0, 1).reshape(batch_size, -1, 1)
+                bias = bias.reshape(*A_shape[1:]).permute(1, 2, 0, 3).reshape(batch_size, 3, -1, 1)
                 # FIXME avoid .transpose(0, 1) back
-                bias_new = A.matmul(bias).squeeze(-1).transpose(0, 1)
+                bias_new = A.matmul(bias).squeeze(-1).permute(2, 0, 1)
             else:
                 batch_size = A.shape[1]
                 A = A.view(output_dim, batch_size, -1)
@@ -699,7 +701,6 @@ class BoundBuffers(BoundInput):
         return self.buffer
 
 
-# TODO: START HERE
 class BoundLinear(Bound):
     def __init__(self, input_name, name, ori_name, attr, inputs, output_index, options, device):
         # Gemm:
@@ -784,10 +785,9 @@ class BoundLinear(Bound):
         assert len(x) == 2 or len(x) == 3
         has_bias = len(x) == 3
         # x[0]: input node, x[1]: weight, x[2]: bias
+        # input_lb includes the lower bound of [intermediate bound, weight, bias] of a layer
         input_lb = [xi.lower if hasattr(xi, 'lower') else None for xi in x]
         input_ub = [xi.upper if hasattr(xi, 'upper') else None for xi in x]
-        print('Bound Linear:', input_lb, input_ub)
-
         # transpose and scale each term if necessary.
         input_lb = self._preprocess(*input_lb)
         input_ub = self._preprocess(*input_ub)
@@ -798,15 +798,16 @@ class BoundLinear(Bound):
 
         # Case #1: No weight/bias perturbation, only perturbation on input.
         if not self.is_input_perturbed(1) and (not has_bias or not self.is_input_perturbed(2)):
-            # If last_lA and last_uA are indentity matrices.
+            # If last_lA and last_uA are identity matrices.
             if isinstance(last_lA, eyeC) and isinstance(last_uA, eyeC):
                 # Use this layer's W as the next bound matrices.
                 # Duplicate the batch dimension. Other dimensions are kept 1.
+                # TODO: why duplicate the batch dimension?
                 # Not perturbed, so we can use either lower or upper.
-                lA_x = uA_x = input_lb[1].unsqueeze(1).repeat([1, batch_size] + [1] * (input_lb[1].ndim - 1))
+                lA_x = uA_x = input_lb[1].unsqueeze(1).unsqueeze(2).repeat([1, batch_size, 3] + [1] * (input_lb[1].ndim - 1))
                 # Bias will be directly added to output.
                 if has_bias:
-                    lbias = ubias = input_lb[2].unsqueeze(1).repeat(1, batch_size)
+                    lbias = ubias = input_lb[2].unsqueeze(1).unsqueeze(2).repeat(1, batch_size, 3)
             elif isinstance(last_lA, OneHotC) or isinstance(last_uA, OneHotC):
                 # We need to select several rows from the weight matrix (its shape is output_size * input_size).
                 lA_x, lbias = self.onehot_mult(input_lb[1], input_lb[2] if has_bias else None, last_lA, batch_size)
@@ -866,7 +867,7 @@ class BoundLinear(Bound):
             # It's okay if last_lA or last_uA is eyeC, as it will be handled in the perturbation object.
             lA_bias = last_lA
             uA_bias = last_uA
-        # Only (lA_x, uA_x) useful for normal perturbed input
+        # Only (lA_x, uA_x) useful for normal perturbed input.
         return [(lA_x, uA_x), (lA_y, uA_y), (lA_bias, uA_bias)], lbias, ubias
 
     # TODO: why need reshape?
@@ -1164,8 +1165,7 @@ class BoundLinear(Bound):
             raise NotImplementedError(
                 "Unsupported perturbation combination: data={}, weight={}".format(input_norm, weight_norm))
 
-    # w, b and x are all represented by LinearBound object
-    # x contains the lower & upper weights so far, and concrete lower & upper bounds
+    # w: an optional argument which can be utilized by BoundMatMul
     def bound_forward(self, dim_in, x, w=None, b=None, C=None):
         has_bias = b is not None
         x, w, b = self._preprocess(x, w, b)
@@ -2008,10 +2008,10 @@ class BoundActivation(Bound):
 
         if self.lw.ndim > 0:
             if x.lw is not None:
-                lw = self.lw.unsqueeze(1).clamp(min=0) * x.lw + \
-                     self.lw.unsqueeze(1).clamp(max=0) * x.uw
-                uw = self.uw.unsqueeze(1).clamp(max=0) * x.lw + \
-                     self.uw.unsqueeze(1).clamp(min=0) * x.uw
+                lw = self.lw.unsqueeze(2).clamp(min=0) * x.lw + \
+                     self.lw.unsqueeze(2).clamp(max=0) * x.uw
+                uw = self.uw.unsqueeze(2).clamp(max=0) * x.lw + \
+                     self.uw.unsqueeze(2).clamp(min=0) * x.uw
             else:
                 lw = uw = None
         else:
@@ -2026,7 +2026,6 @@ class BoundActivation(Bound):
         ub = self.uw.clamp(max=0) * x.lb + self.uw.clamp(min=0) * x.ub + self.ub
 
         # LinearBound is a named tuple defined in utils.py
-        # The shape of lw is
         return LinearBound(lw, lb, uw, ub)
 
     def interval_propagate(self, *v):
@@ -2164,7 +2163,7 @@ class BoundRelu(BoundOptimizableActivation):
         super().__init__(input_name, name, ori_name, attr, inputs, output_index, options, device)
         self.options = options
         # self.relu_options = options.get('relu', 'adaptive')
-        self.relu_options = options.get('relu', 'zero-lb')
+        self.relu_options = options.get('relu', 'multi-bound')
         self.beta = self.beta_mask = self.masked_beta = self.sparse_beta = None
         self.split_beta_used = False
         self.history_beta_used = False
@@ -2221,6 +2220,11 @@ class BoundRelu(BoundOptimizableActivation):
             lower_k = torch.zeros_like(upper_k)
         elif self.relu_options == "one-lb":
             lower_k = torch.ones_like(upper_k)
+        elif self.relu_options == 'multi-bound':
+            tmp_k_1 = upper_k.narrow(1, 0, 1)
+            tmp_k_2 = torch.zeros_like(tmp_k_1)
+            tmp_k_3 = torch.ones_like(tmp_k_1)
+            lower_k = torch.cat([tmp_k_1, tmp_k_2, tmp_k_3], dim=1)
         elif self.opt_stage == 'opt':
             # Each actual alpha in the forward mode has shape (batch_size, *relu_node_shape]. 
             # But self.alpha has shape (2, output_shape, batch_size, *relu_node_shape]
@@ -2247,12 +2251,11 @@ class BoundRelu(BoundOptimizableActivation):
             #         x.lower = x.lower * (self.beta_mask != 1).to(torch.float32)
             #         x.upper = x.upper * (self.beta_mask != -1).to(torch.float32)
 
-            lb_r = x.lower.clamp(max=0)
-            ub_r = x.upper.clamp(min=0)
+            lb_r = x.lower.clamp(max=0).unsqueeze(1).repeat(1, 3, 1)
+            ub_r = x.upper.clamp(min=0).unsqueeze(1).repeat(1, 3, 1)
         else:
-            lb_r = self.lower.clamp(max=0)
-            ub_r = self.upper.clamp(min=0)
-        print('Bound ReLU:', lb_r, ub_r)
+            lb_r = self.lower.clamp(max=0).unsqueeze(1).repeat(1, 3, 1)
+            ub_r = self.upper.clamp(min=0).unsqueeze(1).repeat(1, 3, 1)
 
         self.I = ((lb_r != 0) * (ub_r != 0)).detach()  # unstable neurons
         # print('unstable neurons:', self.I.sum())
@@ -2280,6 +2283,11 @@ class BoundRelu(BoundOptimizableActivation):
             lower_d = (upper_d > 0.0).float()
         elif self.relu_options == "reversed-adaptive":
             lower_d = (upper_d < 0.5).float()
+        elif self.relu_options == 'multi-bound':
+            tmp_d_1 = upper_d.narrow(1, 0, 1)
+            tmp_d_2 = (upper_d >= 1.0).float().narrow(1, 0, 1)
+            tmp_d_3 = (upper_d > 0.0).float().narrow(1, 0, 1)
+            lower_d = torch.cat([tmp_d_1, tmp_d_2, tmp_d_3], dim=1)
         elif self.opt_stage == 'opt':
             # Alpha-CROWN.
             lower_d = None
@@ -2324,6 +2332,7 @@ class BoundRelu(BoundOptimizableActivation):
         # assert self.I.sum() == torch.logical_and(0 < self.d, self.d < 1).sum()
 
         # Upper bound always needs an extra specification dimension, since they only depend on lb and ub.
+        # TODO: Add dimension here.
         upper_d = upper_d.unsqueeze(0)
         if not flag_expand:
             if self.opt_stage == 'opt':
@@ -2333,7 +2342,6 @@ class BoundRelu(BoundOptimizableActivation):
             else:
                 lower_d = lower_d.unsqueeze(0)
 
-        # Choose upper or lower bounds based on the sign of last_A
         def _bound_oneside(last_A, d_pos, d_neg, b_pos, b_neg):
             if last_A is None:
                 return None, 0
@@ -2424,7 +2432,7 @@ class BoundRelu(BoundOptimizableActivation):
                     if lA is not None:
                         lA = Patches(lA.patches - masked_beta_unfolded, lA.stride, lA.padding, lA.patches.shape, 0)
                 elif type(A) is torch.Tensor:
-                    # For matrix mode, beta is sparse.
+                     # For matrix mode, beta is sparse.
                     beta_values = (self.sparse_beta * self.sparse_beta_sign).expand(lA.size(0), -1, -1)
                     # self.single_beta_loc has shape [batch, max_single_split]. Need to expand at the specs dimension.
                     beta_indices = self.sparse_beta_loc.unsqueeze(0).expand(lA.size(0), -1, -1)

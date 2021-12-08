@@ -142,7 +142,8 @@ class PerturbationLpNorm(Perturbation):
             nonlocal x
             if not isinstance(A, eyeC):
                 # A has (Batch, spec, *input_size). For intermediate neurons, spec is *neuron_size.
-                A = A.reshape(A.shape[0], A.shape[1], -1)
+                A = A.reshape(A.shape[0], A.shape[1], A.shape[2], -1)
+                # A = A.reshape(A.shape[0], A.shape[1], -1)
 
                 if extra_constr is not None:
                     # For each neuron, we have a beta, so beta size is (Batch, *neuron_size, n_beta) (in A, spec is *neuron_size).
@@ -296,9 +297,9 @@ class PerturbationLpNorm(Perturbation):
                 nominal=nominal, lower_offset=lower_offset, upper_offset=upper_offset), x, None
         batch_size = x.shape[0]
         dim = x.reshape(batch_size, -1).shape[-1]
-        eye = torch.eye(dim).to(x).unsqueeze(0).repeat(batch_size, 1, 1)
-        lw = eye.reshape(batch_size, dim, *x.shape[1:])
-        lb = torch.zeros_like(x).to(x.device)
+        eye = torch.eye(dim).to(x).unsqueeze(0).repeat(batch_size, 3, 1, 1)
+        lw = eye.reshape(batch_size, 3, dim, *x.shape[1:])
+        lb = torch.zeros_like(x).to(x.device).unsqueeze(1).repeat(batch_size, 3, 1)
         uw, ub = lw.clone(), lb.clone()     
         return LinearBound(
             lw, lb, uw, ub, x_L, x_U, 

@@ -5,7 +5,7 @@
       <paths name="zhengye@172.31.233.88:22 password">
         <serverdata>
           <mappings>
-            <mapping deploy="/data/zhengye/LiRPA_new" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/data/zhengye/LiRPA_new" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>
