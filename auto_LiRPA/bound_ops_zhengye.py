@@ -1181,8 +1181,8 @@ class BoundLinear(Bound):
                 if b is not None:
                     b = C.to(b).matmul(b)
                 w_pos, w_neg = w.clamp(min=0), w.clamp(max=0)
-                lb = (x.lb.unsqueeze(1).matmul(w_pos) + x.ub.unsqueeze(1).matmul(w_neg)).squeeze(1)
-                ub = (x.ub.unsqueeze(1).matmul(w_pos) + x.lb.unsqueeze(1).matmul(w_neg)).squeeze(1)
+                lb = (x.lb.unsqueeze(2).matmul(w_pos) + x.ub.unsqueeze(2).matmul(w_neg)).squeeze(2)
+                ub = (x.ub.unsqueeze(2).matmul(w_pos) + x.lb.unsqueeze(2).matmul(w_neg)).squeeze(2)
             else:               
                 w = w.t()
                 w_pos, w_neg = w.clamp(min=0), w.clamp(max=0)

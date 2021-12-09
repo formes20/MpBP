@@ -2195,6 +2195,8 @@ class BoundedModule(nn.Module):
                             root[i].center, _lA, sign=-1, aux=root[i].aux).view(lower.shape)
                         upper = upper + root[i].perturbation.concretize(
                             root[i].center, _uA, sign=+1, aux=root[i].aux).view(upper.shape)
+                        print('concretized lower:\n', lower)
+                        print('concretized upper:\n', upper)
                         best_lower = torch.max(lower, 1)[0].repeat(1, 3, 1)
                         best_upper = torch.min(upper, 1)[0].repeat(1, 3, 1)
                         prev_dim_in += root[i].dim
