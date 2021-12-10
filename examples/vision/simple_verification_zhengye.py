@@ -55,7 +55,7 @@ lirpa_model = BoundedModule(model, torch.empty_like(image), device=image.device)
 print('Running on', image.device)
 
 # Step 4: Compute bounds using LiRPA given a perturbation
-eps = 0.1
+eps = 0.01
 norm = float("inf")
 ptb = PerturbationLpNorm(norm=norm, eps=eps)
 image = BoundedTensor(image, ptb)
@@ -64,8 +64,8 @@ pred = lirpa_model(image)
 label = torch.argmax(pred, dim=1).cpu().detach().numpy()
 
 # Step 5: Compute bounds for final output
-# for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)', ]:
-for method in ['backward (CROWN)']:
+for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)']:
+# for method in ['backward (CROWN)']:
     print("Bounding method:", method)
     lb, ub = lirpa_model.compute_bounds(x=(image,), method=method.split()[0])
 

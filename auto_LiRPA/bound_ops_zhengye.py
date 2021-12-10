@@ -1916,13 +1916,13 @@ class BoundActivation(Bound):
 
     def _init_masks(self, x):
         # mask_pos: (bool tensor) Mask according to concrete bounds lower & upper.
-        self.mask_pos = torch.ge(x.lower, 0).to(torch.float)
-        self.mask_neg = torch.le(x.upper, 0).to(torch.float)
+        self.mask_pos = torch.ge(x.lower, 0).to(torch.float).unsqueeze(1).repeat(1, 3, 1)
+        self.mask_neg = torch.le(x.upper, 0).to(torch.float).unsqueeze(1).repeat(1, 3, 1)
         self.mask_both = 1 - self.mask_pos - self.mask_neg
 
     def _init_linear(self, x, dim_opt=None):
         self._init_masks(x)
-        self.lw = torch.zeros_like(x.lower)
+        self.lw = torch.zeros_like(x.lower).unsqueeze(1).repeat(1, 3, 1)
         self.lb = self.lw.clone()
         self.uw = self.lw.clone()
         self.ub = self.lw.clone()

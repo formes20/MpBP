@@ -1502,7 +1502,7 @@ class BoundedModule(nn.Module):
                     if not n_pre.used:
                         n_pre.used = True
                         queue.append(n_pre)
-
+        # F9 start point here.
         for i in self._modules.values():  # for all nodes
             if not i.used:
                 continue
@@ -1812,6 +1812,7 @@ class BoundedModule(nn.Module):
             C = C.transpose(1, 2).transpose(0, 1)
         elif isinstance(C, (eyeC, OneHotC)):
             C = C._replace(shape=(C.shape[2], C.shape[0], C.shape[1], C.shape[3]))
+            # Now the shape of C is (output_dim, batch_size, path_num, remain_dim)
 
         node.lA = C if bound_lower else None
         node.uA = C if bound_upper else None
@@ -2150,6 +2151,7 @@ class BoundedModule(nn.Module):
                 if not hasattr(l, 'linear'):
                     self._forward_general(node=l, root=root, dim_in=dim_in)
 
+            # LinearBound(s) of l_pre(node's inputs).
             inp = [self._modules[l_pre].linear for l_pre in node.input_name]
 
             if C is not None and isinstance(node, BoundLinear) and not node.is_input_perturbed(1):
@@ -2195,10 +2197,10 @@ class BoundedModule(nn.Module):
                             root[i].center, _lA, sign=-1, aux=root[i].aux).view(lower.shape)
                         upper = upper + root[i].perturbation.concretize(
                             root[i].center, _uA, sign=+1, aux=root[i].aux).view(upper.shape)
-                        print('concretized lower:\n', lower)
-                        print('concretized upper:\n', upper)
-                        best_lower = torch.max(lower, 1)[0].repeat(1, 3, 1)
-                        best_upper = torch.min(upper, 1)[0].repeat(1, 3, 1)
+
+                        best_lower = torch.max(lower, 1)[0]
+                        best_upper = torch.min(upper, 1)[0]
+                        # Now the shape of best_lower is (batch_size, next_dim)
                         prev_dim_in += root[i].dim
                 if C is None:
                     node.linear = node.linear._replace(lower=best_lower, upper=best_upper)
@@ -2235,7 +2237,7 @@ class BoundedModule(nn.Module):
                 if i >= self.num_global_inputs:
                     root[i].forward_value = root[i].forward_value.unsqueeze(0).repeat(
                         *([batch_size] + [1] * self.forward_value.ndim))
-                prev_dim_in += shape[1]
+                prev_dim_in += shape[2]
             else:
                 fv = root[i].forward_value
                 shape = fv.shape

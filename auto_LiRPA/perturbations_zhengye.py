@@ -177,7 +177,7 @@ class PerturbationLpNorm(Perturbation):
                         A = A - sign * extra_A
                         bound = A.matmul(center) - sign * extra_bias.unsqueeze(-1) + sign * A.abs().matmul(diff)
                     else:
-                        bound = A.matmul(center) + sign * A.abs().matmul(diff)
+                        bound = A.matmul(center.unsqueeze(1)) + sign * A.abs().matmul(diff.unsqueeze(1))
                 else:
                     assert extra_constr is None
                     # A is an identity matrix. No need to do this matmul.
@@ -299,7 +299,8 @@ class PerturbationLpNorm(Perturbation):
         dim = x.reshape(batch_size, -1).shape[-1]
         eye = torch.eye(dim).to(x).unsqueeze(0).repeat(batch_size, 3, 1, 1)
         lw = eye.reshape(batch_size, 3, dim, *x.shape[1:])
-        lb = torch.zeros_like(x).to(x.device).unsqueeze(1).repeat(batch_size, 3, 1)
+        lb = torch.zeros_like(x).to(x.device).unsqueeze(1).repeat(1, 3, 1)
+        # Now the shape of lb is (batch_size, path_num, dim)
         uw, ub = lw.clone(), lb.clone()     
         return LinearBound(
             lw, lb, uw, ub, x_L, x_U, 
