@@ -65,7 +65,6 @@ class BoundedModule(nn.Module):
         else:
             self.device = device
         self.global_input = global_input
-        # TODO what's ibp_relative and conv_mode
         self.ibp_relative = bound_opts.get('ibp_relative', False)   
         self.conv_mode = bound_opts.get("conv_mode", "patches")
         if auto_batch_dim:
@@ -210,7 +209,6 @@ class BoundedModule(nn.Module):
                     name = self.node_name_map[name]
                 yield name, v
 
-    # _modules.values (type: OrderDict) is class of node
     def train(self, mode=True):
         super().train(mode)
         for node in self._modules.values():
@@ -221,7 +219,6 @@ class BoundedModule(nn.Module):
         for node in self._modules.values():
             node.eval()
 
-    # TODO:
     def forward(self, *x, final_node_name=None):
         self._set_input(*x)
 
@@ -411,6 +408,7 @@ class BoundedModule(nn.Module):
         global_input_cpu = self._to(global_input, 'cpu')
         model.train()
         model.to('cpu')
+        # Find input nodes, output nodes, and the operations of nodes.
         nodesOP, nodesIn, nodesOut, template = parse_module(model, global_input_cpu)
         model.to(self.device)
         for i in range(0, len(nodesIn)):
@@ -418,7 +416,6 @@ class BoundedModule(nn.Module):
                 nodesIn[i] = nodesIn[i]._replace(param=nodesIn[i].param.to(self.device))
         global_input_unpacked = unpack_inputs(global_input)
 
-        # Convert input nodes and parameters.
         for i, n in enumerate(nodesIn):
             if n.input_index is not None:
                 # give a node attribute BoundInput or BoundParams
@@ -434,7 +431,6 @@ class BoundedModule(nn.Module):
 
         unsupported_ops = []
 
-        # Convert other operation nodes.
         for n in range(len(nodesOP)):
             attr = nodesOP[n].attr
             inputs, ori_names = self._get_node_input(nodesOP, nodesIn, nodesOP[n])
@@ -458,8 +454,6 @@ class BoundedModule(nn.Module):
             if nodesOP[n].op == 'onnx::BatchNormalization':
                 # BatchNormalization node needs model.training flag to set running mean and vars
                 # set training=False to avoid wrongly updating running mean/vars during bound wrapper
-
-                # TODO: why op is used as a method?
                 nodesOP[n] = nodesOP[n]._replace(
                     bound_node=op(
                         nodesOP[n].inputs, nodesOP[n].name, None, attr,
@@ -483,12 +477,12 @@ class BoundedModule(nn.Module):
         """
 
         Args:
-            nodesOP:
-            nodesIn:
-            nodesOut:
+            nodesOP: nodes operations list
+            nodesIn: input nodes list
+            nodesOut: output nodes list
             template: None tensor with output shape
 
-        Returns: LiRPA graph
+        Returns: LiRPA graph with
 
         """
         nodes = []
@@ -501,6 +495,7 @@ class BoundedModule(nn.Module):
         # output element.
         self.final_name = nodesOP[-1].name
         assert self.final_name == nodesOut[0]
+
         self.input_name, self.input_index, self.root_name = [], [], []
         for node in nodesIn:
             self.root_name.append(node.name)
@@ -568,7 +563,6 @@ class BoundedModule(nn.Module):
         return nodesOP, nodesIn, found_complex
 
     """build a dict with {ori_name: name, name: ori_name}"""
-    # TODO: why do we need this map?
     def _get_node_name_map(self, ):
         self.node_name_map = {}
         for node in self._modules.values():
@@ -1812,7 +1806,7 @@ class BoundedModule(nn.Module):
             C = C.transpose(1, 2).transpose(0, 1)
         elif isinstance(C, (eyeC, OneHotC)):
             C = C._replace(shape=(C.shape[2], C.shape[0], C.shape[1], C.shape[3]))
-            # Now the shape of C is (output_dim, batch_size, path_num, remain_dim)
+            # Now the shape of C is (spec, batch_size, path_num, *output_dim)
 
         node.lA = C if bound_lower else None
         node.uA = C if bound_upper else None
@@ -2099,6 +2093,7 @@ class BoundedModule(nn.Module):
                                                               aux=root[i].aux) if bound_lower else None
                     ub = ub + root[i].perturbation.concretize(root[i].center, uA, sign=+1,
                                                               aux=root[i].aux) if bound_upper else None
+                    # print('concreting')
             # FIXME to simplify
             elif i < self.num_global_inputs:
                 if not isinstance(lA, eyeC):
@@ -2119,7 +2114,7 @@ class BoundedModule(nn.Module):
                     ub = ub + root[i].forward_value.view(1, -1) if bound_upper else None
                 else:
                     ub = ub + uA.matmul(root[i].forward_value.view(-1, 1)).squeeze(-1) if bound_upper else None
-        # So lb is lower bound rather lower bias.
+        # lb is lower bound rather lower bias.
         if bound_lower:
             node.lower = lb.view(batch_size, 3, *output_shape).max(1)[0].squeeze(1)
         else:
@@ -2191,8 +2186,8 @@ class BoundedModule(nn.Module):
                 uA = uw.reshape(batch_size, 3, dim_in, -1).transpose(2, 3)
                 for i in range(len(root)):
                     if hasattr(root[i], 'perturbation') and root[i].perturbation is not None:
-                        _lA = lA[:, :, prev_dim_in : (prev_dim_in + root[i].dim)]
-                        _uA = uA[:, :, prev_dim_in : (prev_dim_in + root[i].dim)]
+                        _lA = lA[:, :, :, prev_dim_in:(prev_dim_in + root[i].dim)]
+                        _uA = uA[:, :, :, prev_dim_in:(prev_dim_in + root[i].dim)]
                         lower = lower + root[i].perturbation.concretize(
                             root[i].center, _lA, sign=-1, aux=root[i].aux).view(lower.shape)
                         upper = upper + root[i].perturbation.concretize(
@@ -2200,7 +2195,7 @@ class BoundedModule(nn.Module):
 
                         best_lower = torch.max(lower, 1)[0]
                         best_upper = torch.min(upper, 1)[0]
-                        # Now the shape of best_lower is (batch_size, next_dim)
+                        # The shape of best_lower is (batch_size, *dim)
                         prev_dim_in += root[i].dim
                 if C is None:
                     node.linear = node.linear._replace(lower=best_lower, upper=best_upper)
@@ -2268,7 +2263,7 @@ class BoundDataParallel(DataParallel):
         super(BoundDataParallel, self).__init__(*inputs, **kwargs)
         self._replicas = None
 
-    # Overide the forward method
+    # Override the forward method
     def forward(self, *inputs, **kwargs):
         disable_multi_gpu = False  # forward by single GPU
         no_replicas = False  # forward by multi GPUs but without replicate

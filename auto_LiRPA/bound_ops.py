@@ -786,7 +786,7 @@ class BoundLinear(Bound):
         # x[0]: input node, x[1]: weight, x[2]: bias
         input_lb = [xi.lower if hasattr(xi, 'lower') else None for xi in x]
         input_ub = [xi.upper if hasattr(xi, 'upper') else None for xi in x]
-        print('Bound Linear:', input_lb, input_ub)
+        # print('Bound Linear:\n', input_lb, input_ub)
 
         # transpose and scale each term if necessary.
         input_lb = self._preprocess(*input_lb)
@@ -2252,7 +2252,7 @@ class BoundRelu(BoundOptimizableActivation):
         else:
             lb_r = self.lower.clamp(max=0)
             ub_r = self.upper.clamp(min=0)
-        print('Bound ReLU:', lb_r, ub_r)
+        # print('Bound ReLU:\n', lb_r, ub_r)
 
         self.I = ((lb_r != 0) * (ub_r != 0)).detach()  # unstable neurons
         # print('unstable neurons:', self.I.sum())

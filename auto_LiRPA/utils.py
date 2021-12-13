@@ -236,7 +236,7 @@ def patchesToMatrix(pieces, input_shape, stride, padding):
     # Now we need to fill the conv kernel parameters into the last three dimensions of matrix_strided.
     # The first index: we fill each patch location with a conv kernel.
     first_indices = torch.arange(total_patches, device=pieces.device)
-    second_indices = torch.div(first_indices, output_y, rounding_mode="trunc")
+    second_indices = torch.floor_divide(first_indices, output_y)
     third_indices = torch.fmod(first_indices, output_y)
     pieces = pieces.transpose(1,2)
 

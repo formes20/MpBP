@@ -392,7 +392,7 @@ class Bound(nn.Module):
             else:
                 return bias_new
         elif type(A) == Patches:
-            if torch.norm(A.patches, p = 1) < epsilon:
+            if torch.norm(A.patches, p=1) < epsilon:
                 return 0
 
             # the shape of A.patches is [batch, L, out_c, in_c, K, K]
@@ -486,17 +486,17 @@ class BoundReshape(Bound):
         def _bound_oneside(A):
             if A is None:
                 return None
-            # A shape is (spec, batch, *node_shape)
-            return A.reshape(A.shape[0], A.shape[1], *self.input_shape[1:])
+            # A shape is (spec, batch, path, *node_shape)
+            return A.reshape(A.shape[0], A.shape[1], A.shape[2], *self.input_shape[1:])
 
         return [(_bound_oneside(last_lA), _bound_oneside(last_uA)), (None, None)], 0, 0
 
     def bound_forward(self, dim_in, x, shape):
         batch_size = x.lw.shape[0]
-        lw = x.lw.reshape(batch_size, dim_in, *self.shape[1:])
-        uw = x.uw.reshape(batch_size, dim_in, *self.shape[1:])
-        lb = x.lb.reshape(batch_size, *self.shape[1:])
-        ub = x.ub.reshape(batch_size, *self.shape[1:])
+        lw = x.lw.reshape(batch_size, 3, dim_in, *self.shape[1:])
+        uw = x.uw.reshape(batch_size, 3, dim_in, *self.shape[1:])
+        lb = x.lb.reshape(batch_size, 3, *self.shape[1:])
+        ub = x.ub.reshape(batch_size, 3, *self.shape[1:])
         return LinearBound(lw, lb, uw, ub)
 
     def interval_propagate(self, *v):
@@ -1395,12 +1395,13 @@ class BoundConv(Bound):
                                 self.padding[0] - 1 - (int(weight.size()[2] - 1) * self.dilation[0])
                 output_padding1 = int(self.input_shape[3]) - (int(self.output_shape[3]) - 1) * self.stride[1] + 2 * \
                                 self.padding[1] - 1 - (int(weight.size()[3] - 1) * self.dilation[0])
-                next_A = F.conv_transpose2d(last_A.reshape(shape[0] * shape[1], *shape[2:]), weight, None,
+                next_A = F.conv_transpose2d(last_A.reshape(shape[0] * shape[1] * shape[2], *shape[3:]), weight, None,
                                             stride=self.stride, padding=self.padding, dilation=self.dilation,
                                             groups=self.groups, output_padding=(output_padding0, output_padding1))
-                next_A = next_A.view(shape[0], shape[1], *next_A.shape[1:])
+                next_A = next_A.view(shape[0], shape[1], shape[2], *next_A.shape[1:])
                 if self.has_bias:
-                    sum_bias = (last_A.sum((3, 4)) * x[2].lower).sum(2)
+                    sum_bias = (last_A.sum((4, 5)) * x[2].lower).sum(3)
+                    # Now the shape of sum_bias is (spec, batch, path, output_channel)
                 else:
                     sum_bias = 0
                 return next_A, sum_bias
@@ -1473,7 +1474,7 @@ class BoundConv(Bound):
         x = x[0]
         input_dim = x.lb.shape[-2] * x.lb.shape[-1]
         wshape = x.lw.shape
-        wshape_conv = (wshape[0] * wshape[1], *wshape[2:])        
+        wshape_conv = (wshape[0] * wshape[1], *wshape[2:])
         eye = torch.eye(input_dim).view(input_dim, 1, *x.lb.shape[-2:])
         weight = F.conv2d(eye, weight, None, self.stride, self.padding, self.dilation, self.groups)
         weight = weight.view(input_dim, -1)
@@ -1580,22 +1581,26 @@ class BoundConv(Bound):
         diff_w = (x.uw - x.lw) / 2
         diff_b = (x.ub - x.lb) / 2
         weight_abs = weight.abs()
-        shape = mid_w.shape
-        shape_wconv = [shape[0] * shape[1]] + list(shape[2:])
+        w_shape = mid_w.shape
+        b_shape = mid_b.shape
+        shape_wconv = [w_shape[0] * w_shape[1] * w_shape[2]] + list(w_shape[3:])
+        shape_bconv = [b_shape[0] * b_shape[1]] + list(b_shape[2:])
         deviation_w = F.conv2d(
             diff_w.reshape(shape_wconv), weight_abs, None, 
             self.stride, self.padding, self.dilation, self.groups)
         deviation_b = F.conv2d(
-            diff_b, weight_abs, None, 
+            diff_b.reshape(shape_bconv), weight_abs, None,
             self.stride, self.padding, self.dilation, self.groups)
         center_w = F.conv2d(
             mid_w.reshape(shape_wconv), weight, None, 
             self.stride, self.padding, self.dilation, self.groups)
-        center_b =  F.conv2d(
-            mid_b, weight, bias, 
+        center_b = F.conv2d(
+            mid_b.reshape(shape_bconv), weight, bias,
             self.stride, self.padding, self.dilation, self.groups)
-        deviation_w = deviation_w.reshape(shape[0], -1, *deviation_w.shape[1:])
-        center_w = center_w.reshape(shape[0], -1, *center_w.shape[1:])
+        deviation_w = deviation_w.reshape(w_shape[0], 3, -1, *deviation_w.shape[1:])
+        center_w = center_w.reshape(w_shape[0], 3, -1, *center_w.shape[1:])
+        deviation_b = deviation_b.reshape(b_shape[0], 3, *deviation_b.shape[1:])
+        center_b = center_b.reshape(b_shape[0], 3, *center_b.shape[1:])
 
         return LinearBound(
             lw = center_w - deviation_w,
@@ -1916,8 +1921,9 @@ class BoundActivation(Bound):
 
     def _init_masks(self, x):
         # mask_pos: (bool tensor) Mask according to concrete bounds lower & upper.
-        self.mask_pos = torch.ge(x.lower, 0).to(torch.float).unsqueeze(1).repeat(1, 3, 1)
-        self.mask_neg = torch.le(x.upper, 0).to(torch.float).unsqueeze(1).repeat(1, 3, 1)
+        bound_shape = x.lower.shape
+        self.mask_pos = torch.ge(x.lower, 0).to(torch.float).unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
+        self.mask_neg = torch.le(x.upper, 0).to(torch.float).unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
         self.mask_both = 1 - self.mask_pos - self.mask_neg
 
     def _init_linear(self, x, dim_opt=None):
@@ -2060,12 +2066,13 @@ class BoundOptimizableActivation(BoundActivation):
 
     def _init_linear(self, x, dim_opt=None):
         self._init_masks(x)
+        bound_shape = x.lower.shape
         # The first dimension of size 2 is used for lA and uA respectively,
         # when computing intermediate bounds.
         if self.opt_stage == 'opt' and dim_opt:
             self.lw = torch.zeros(2, dim_opt, *x.lower.shape).to(x.lower)     
         else:
-            self.lw = torch.zeros_like(x.lower)
+            self.lw = torch.zeros_like(x.lower).unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
         self.lb = self.lw.clone()
         self.uw = self.lw.clone()
         self.ub = self.lw.clone()        
@@ -2196,24 +2203,26 @@ class BoundRelu(BoundOptimizableActivation):
         return F.relu(x)
 
     def bound_relax(self, x):
+        bound_shape = x.lower.shape
         # FIXME maybe avoid using `mask` which looks inefficient
         # m = torch.min((x.lower + x.upper) / 2, x.lower + 0.99)
         # For determined alpha
+        expanded_x_lower = x.lower.unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
         self._add_linear(mask=self.mask_neg, type='lower',
-                         k=torch.zeros_like(x.lower), x0=0, y0=0)
+                         k=torch.zeros_like(expanded_x_lower), x0=0, y0=0)
         self._add_linear(mask=self.mask_neg, type='upper',
-                         k=torch.zeros_like(x.lower), x0=0, y0=0)
+                         k=torch.zeros_like(expanded_x_lower), x0=0, y0=0)
         self._add_linear(mask=self.mask_pos, type='lower',
-                         k=torch.ones_like(x.lower), x0=0, y0=0)
+                         k=torch.ones_like(expanded_x_lower), x0=0, y0=0)
         self._add_linear(mask=self.mask_pos, type='upper',
-                         k=torch.ones_like(x.lower), x0=0, y0=0)
+                         k=torch.ones_like(expanded_x_lower), x0=0, y0=0)
         upper = torch.max(x.upper, x.lower + 1e-8)
         # For undetermined alpha
         delta = 1e-8
         r = (x.upper - x.lower).clamp(min=delta)
         upper_k = x.upper / r + delta / r
         self._add_linear(mask=self.mask_both, type='upper',
-                         k=upper_k, x0=x.lower, y0=0)
+                         k=upper_k.unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:]))), x0=expanded_x_lower, y0=0)
         if self.relu_options == "same-slope":
             lower_k = upper_k
         elif self.relu_options == "zero-lb":
@@ -2221,7 +2230,7 @@ class BoundRelu(BoundOptimizableActivation):
         elif self.relu_options == "one-lb":
             lower_k = torch.ones_like(upper_k)
         elif self.relu_options == 'multi-bound':
-            tmp_k_1 = upper_k.narrow(1, 0, 1)
+            tmp_k_1 = upper_k.unsqueeze(1)
             tmp_k_2 = torch.zeros_like(tmp_k_1)
             tmp_k_3 = torch.ones_like(tmp_k_1)
             lower_k = torch.cat([tmp_k_1, tmp_k_2, tmp_k_3], dim=1)
@@ -2250,12 +2259,13 @@ class BoundRelu(BoundOptimizableActivation):
             #         # set bound neuron-wise according to beta_mask
             #         x.lower = x.lower * (self.beta_mask != 1).to(torch.float32)
             #         x.upper = x.upper * (self.beta_mask != -1).to(torch.float32)
-
-            lb_r = x.lower.clamp(max=0).unsqueeze(1).repeat(1, 3, 1)
-            ub_r = x.upper.clamp(min=0).unsqueeze(1).repeat(1, 3, 1)
+            bound_shape = x.lower.shape
+            lb_r = x.lower.clamp(max=0).unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
+            ub_r = x.upper.clamp(min=0).unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
         else:
-            lb_r = self.lower.clamp(max=0).unsqueeze(1).repeat(1, 3, 1)
-            ub_r = self.upper.clamp(min=0).unsqueeze(1).repeat(1, 3, 1)
+            bound_shape = self.lower.shape
+            lb_r = self.lower.clamp(max=0).unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
+            ub_r = self.upper.clamp(min=0).unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
 
         self.I = ((lb_r != 0) * (ub_r != 0)).detach()  # unstable neurons
         # print('unstable neurons:', self.I.sum())
@@ -2332,7 +2342,6 @@ class BoundRelu(BoundOptimizableActivation):
         # assert self.I.sum() == torch.logical_and(0 < self.d, self.d < 1).sum()
 
         # Upper bound always needs an extra specification dimension, since they only depend on lb and ub.
-        # TODO: Add dimension here.
         upper_d = upper_d.unsqueeze(0)
         if not flag_expand:
             if self.opt_stage == 'opt':

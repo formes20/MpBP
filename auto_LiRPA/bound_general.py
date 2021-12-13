@@ -459,7 +459,6 @@ class BoundedModule(nn.Module):
                 # BatchNormalization node needs model.training flag to set running mean and vars
                 # set training=False to avoid wrongly updating running mean/vars during bound wrapper
 
-                # TODO: why op is used as a method?
                 nodesOP[n] = nodesOP[n]._replace(
                     bound_node=op(
                         nodesOP[n].inputs, nodesOP[n].name, None, attr,
@@ -480,17 +479,6 @@ class BoundedModule(nn.Module):
 
 
     def _build_graph(self, nodesOP, nodesIn, nodesOut, template):
-        """
-
-        Args:
-            nodesOP:
-            nodesIn:
-            nodesOut:
-            template: None tensor with output shape
-
-        Returns: LiRPA graph
-
-        """
         nodes = []
         for node in nodesOP + nodesIn:
             assert (node.bound_node is not None)
@@ -2047,7 +2035,6 @@ class BoundedModule(nn.Module):
             lb = lb.transpose(0, 1)
         if ub.ndim >= 2:
             ub = ub.transpose(0, 1)
-        print('after len(queue):', lb, ub)
         output_shape = node.output_shape[1:]
         if np.prod(node.output_shape[1:]) != output_dim and type(C) != Patches:
             output_shape = [-1]
@@ -2093,7 +2080,7 @@ class BoundedModule(nn.Module):
                                                               aux=root[i].aux) if bound_lower else None
                     ub = ub + root[i].perturbation.concretize(root[i].center, uA, sign=+1,
                                                               aux=root[i].aux) if bound_upper else None
-                    print('concretizing...', lb, ub)
+                    # print('concretizing...\n', lb, ub)
             # FIXME to simplify
             elif i < self.num_global_inputs:
                 if not isinstance(lA, eyeC):

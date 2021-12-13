@@ -6,7 +6,7 @@ import time
 import torch.optim as optim
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-from thop import profile
+# from thop import profile
 from torch.nn import CrossEntropyLoss
 
 import models
@@ -280,8 +280,8 @@ def main(args):
         final_name2 = None
     model_loss = BoundDataParallel(model_loss)
 
-    macs, params = profile(model_ori, (dummy_input.cuda(),))
-    logger.log('macs: {}, params: {}'.format(macs, params))
+    # macs, params = profile(model_ori, (dummy_input.cuda(),))
+    # logger.log('macs: {}, params: {}'.format(macs, params))
 
     ## Step 4 prepare optimizer, epsilon scheduler and learning rate scheduler
     opt = optim.Adam(model_loss.parameters(), lr=args.lr)

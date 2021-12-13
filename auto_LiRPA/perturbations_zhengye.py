@@ -141,7 +141,7 @@ class PerturbationLpNorm(Perturbation):
         def concretize_matrix(A):
             nonlocal x
             if not isinstance(A, eyeC):
-                # A has (Batch, spec, *input_size). For intermediate neurons, spec is *neuron_size.
+                # A has (Batch, path, spec, *input_size). For intermediate neurons, spec is *neuron_size.
                 A = A.reshape(A.shape[0], A.shape[1], A.shape[2], -1)
                 # A = A.reshape(A.shape[0], A.shape[1], -1)
 
@@ -299,8 +299,8 @@ class PerturbationLpNorm(Perturbation):
         dim = x.reshape(batch_size, -1).shape[-1]
         eye = torch.eye(dim).to(x).unsqueeze(0).repeat(batch_size, 3, 1, 1)
         lw = eye.reshape(batch_size, 3, dim, *x.shape[1:])
-        lb = torch.zeros_like(x).to(x.device).unsqueeze(1).repeat(1, 3, 1)
-        # Now the shape of lb is (batch_size, path_num, dim)
+        lb = torch.zeros_like(x).to(x.device).unsqueeze(1).repeat(1, 3, *([1] * len(x.shape[1:])))
+        # Now the shape of lb is (batch_size, path_num, node_dim)
         uw, ub = lw.clone(), lb.clone()     
         return LinearBound(
             lw, lb, uw, ub, x_L, x_U, 

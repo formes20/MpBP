@@ -24,7 +24,7 @@ import models
 device = 'cpu'
 if torch.cuda.is_available():
     device = 'cuda'
-conv_mode = sys.argv[1] if len(sys.argv) > 1 else 'patches' # conv_mode can be set as 'matrix' or 'patches'
+conv_mode = sys.argv[1] if len(sys.argv) > 1 else 'matrix'  # conv_mode can be set as 'matrix' or 'patches'
 
 seed = 1234
 torch.manual_seed(seed)
