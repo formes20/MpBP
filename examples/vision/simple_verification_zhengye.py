@@ -53,9 +53,9 @@ def mnist_conv():
     )
     return model
 
-model = mnist_conv()
+model = MNIST_FFNN()
 # Optionally, load the pretrained weights.
-checkpoint = torch.load(os.path.join(os.path.dirname(__file__), "./pretrain/mnist_conv.pth"), map_location=torch.device('cpu'))
+checkpoint = torch.load(os.path.join(os.path.dirname(__file__), "./pretrain/mnist_ffnn.pth"), map_location=torch.device('cpu'))
 model.load_state_dict(checkpoint)
 
 
@@ -65,7 +65,7 @@ test_data = torchvision.datasets.MNIST("./data", train=False, download=False, tr
 N = 2
 n_classes = 10
 # Adjust to model input shape!!!
-image = test_data.data[:N].reshape(N, 1, 28, 28)
+image = test_data.data[:N].reshape(N, 784)
 # Convert to float between 0. and 1.
 image = image.to(torch.float32) / 255.0
 true_label = test_data.targets[:N]
@@ -89,9 +89,8 @@ pred = lirpa_model(image)
 label = torch.argmax(pred, dim=1).cpu().detach().numpy()
 
 ### Step 5: Compute bounds for final output
-'''
+
 for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)']:
-# for method in ['backward (CROWN)']:
     print("Bounding method:", method)
     lb, ub = lirpa_model.compute_bounds(x=(image,), method=method.split()[0])
 
@@ -126,5 +125,6 @@ for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)',
     lb, ub = lirpa_model.compute_bounds(x=(image,), method=method.split()[0], C=C)
     for i in range(N):
         print("Image {} top-1 prediction {} ground-truth {}".format(i, label[i], true_label[i]))
-        print("margin bounds: f_{j}(x_0+delta) >= {l:8.3f}".format(j=true_label[i], l=lb[i][0].item()))
+        print("margin bounds: delta_f_{j} >= {l:8.3f}".format(j=true_label[i], l=torch.min(lb, dim=1)[0][i]))
     print()
+'''
