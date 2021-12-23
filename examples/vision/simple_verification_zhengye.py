@@ -53,19 +53,19 @@ def mnist_conv():
     )
     return model
 
-model = MNIST_FFNN()
+model = mnist_conv()
 # Optionally, load the pretrained weights.
-checkpoint = torch.load(os.path.join(os.path.dirname(__file__), "./pretrain/mnist_ffnn.pth"), map_location=torch.device('cpu'))
+checkpoint = torch.load(os.path.join(os.path.dirname(__file__), "./pretrain/mnist_a_adv.pth"), map_location=torch.device('cpu'))
 model.load_state_dict(checkpoint)
 
 
 ### Step 2: Prepare dataset as usual
 test_data = torchvision.datasets.MNIST("./data", train=False, download=False, transform=torchvision.transforms.ToTensor())
 # For illustration, we only use 2 image from dataset
-N = 2
+N = 10
 n_classes = 10
 # Adjust to model input shape!!!
-image = test_data.data[:N].reshape(N, 784)
+image = test_data.data[:N].reshape(N, 1, 28, 28)
 # Convert to float between 0. and 1.
 image = image.to(torch.float32) / 255.0
 true_label = test_data.targets[:N]
@@ -80,7 +80,7 @@ lirpa_model = BoundedModule(model, torch.empty_like(image), device=image.device)
 print('Running on', image.device)
 
 ### Step 4: Compute bounds using LiRPA given a perturbation
-eps = 0.01
+eps = 0.1
 norm = float("inf")
 ptb = PerturbationLpNorm(norm=norm, eps=eps)
 image = BoundedTensor(image, ptb)
@@ -117,7 +117,8 @@ target_labels = (target_labels + groundtruth) % n_classes
 C.scatter_(dim=2, index=target_labels, value=-1.0)
 # print('Computing bounds with a specification matrix:\n', C)
 
-for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)']:
+# for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)']:
+for method in ['backward (CROWN)']:
     print("Bounding method:", method)
     if 'Optimized' in method:
         # For optimized bound, you can change the number of iterations, learning rate, etc here. Also you can increase verbosity to see per-iteration loss values.

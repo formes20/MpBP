@@ -2230,9 +2230,11 @@ class BoundRelu(BoundOptimizableActivation):
         elif self.relu_options == "one-lb":
             lower_k = torch.ones_like(upper_k)
         elif self.relu_options == 'multi-bound':
+            # Use paths: upper_k, zero-lb, adaptive
             tmp_k_1 = upper_k.unsqueeze(1)
             tmp_k_2 = torch.zeros_like(tmp_k_1)
-            tmp_k_3 = torch.ones_like(tmp_k_1)
+            # tmp_k_3 = torch.ones_like(tmp_k_1)
+            tmp_k_3 = torch.gt(torch.abs(x.upper), torch.abs(x.lower)).unsqueeze(1).to(torch.float)
             lower_k = torch.cat([tmp_k_1, tmp_k_2, tmp_k_3], dim=1)
         elif self.opt_stage == 'opt':
             # Each actual alpha in the forward mode has shape (batch_size, *relu_node_shape]. 
@@ -2294,9 +2296,11 @@ class BoundRelu(BoundOptimizableActivation):
         elif self.relu_options == "reversed-adaptive":
             lower_d = (upper_d < 0.5).float()
         elif self.relu_options == 'multi-bound':
+            # Use paths: upper_d, 0, adaptive
             tmp_d_1 = upper_d.narrow(1, 0, 1)
             tmp_d_2 = (upper_d >= 1.0).float().narrow(1, 0, 1)
-            tmp_d_3 = (upper_d > 0.0).float().narrow(1, 0, 1)
+            tmp_d_3 = (upper_d > 0.5).float().narrow(1, 0, 1)
+            # tmp_d_3 = (upper_d > 0.0).float().narrow(1, 0, 1)
             lower_d = torch.cat([tmp_d_1, tmp_d_2, tmp_d_3], dim=1)
         elif self.opt_stage == 'opt':
             # Alpha-CROWN.

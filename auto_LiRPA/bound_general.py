@@ -1766,7 +1766,7 @@ class BoundedModule(nn.Module):
     def _backward_general(self, C=None, node=None, root=None, bound_lower=True, bound_upper=True,
                           return_A=False, needed_A_list=None, average_A=False, A_dict=None, return_b=False, b_dict=None, intermediate_constr=None, unstable_idx=None):
         logger.debug('Backward from ({})[{}]'.format(node, node.name))
-        print('Backward from ({})[{}]'.format(node, node.name))
+        # print('Backward from ({})[{}]'.format(node, node.name))
         _print_time = False
 
         degree_out = {}
