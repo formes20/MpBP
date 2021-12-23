@@ -1471,6 +1471,9 @@ class BoundedModule(nn.Module):
                 raise ValueError('C is not provided while node {} has no default shape'.format(final.shape))
             dim_output = int(np.prod(final.output_shape[1:]))
             C = torch.eye(dim_output, device=self.device).unsqueeze(0).unsqueeze(1).repeat(batch_size, 3, 1, 1)  # TODO: use an eyeC object here.
+        else:
+            C = C.unsqueeze(1).repeat(1, 3, 1, 1)
+            # Now the shape of C is (batch, path, output_dim, spec)
 
         # check whether weights are perturbed and set nonlinear for the BoundMatMul operation
         for n in self._modules.values():
@@ -1774,7 +1777,7 @@ class BoundedModule(nn.Module):
     def _backward_general(self, C=None, node=None, root=None, bound_lower=True, bound_upper=True,
                           return_A=False, needed_A_list=None, average_A=False, A_dict=None, return_b=False, b_dict=None, intermediate_constr=None, unstable_idx=None):
         logger.debug('Backward from ({})[{}]'.format(node, node.name))
-        print('Backward from ({})[{}]'.format(node, node.name))
+        # print('Backward from ({})[{}]'.format(node, node.name))
         _print_time = False
 
         # Paper page 16, A.3, GetOutDegree for every node before the final `node`.

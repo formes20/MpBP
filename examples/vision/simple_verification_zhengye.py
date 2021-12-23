@@ -89,7 +89,7 @@ pred = lirpa_model(image)
 label = torch.argmax(pred, dim=1).cpu().detach().numpy()
 
 ### Step 5: Compute bounds for final output
-
+'''
 for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)']:
     print("Bounding method:", method)
     lb, ub = lirpa_model.compute_bounds(x=(image,), method=method.split()[0])
@@ -115,9 +115,9 @@ C.scatter_(dim=2, index=groundtruth.repeat(1, n_classes - 1, 1), value=1.0)
 target_labels = torch.arange(1, 10, device=image.device).repeat(N, 1, 1).transpose(1, 2)
 target_labels = (target_labels + groundtruth) % n_classes
 C.scatter_(dim=2, index=target_labels, value=-1.0)
-print('Computing bounds with a specification matrix:\n', C)
+# print('Computing bounds with a specification matrix:\n', C)
 
-for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)', 'CROWN-Optimized (alpha-CROWN)']:
+for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)']:
     print("Bounding method:", method)
     if 'Optimized' in method:
         # For optimized bound, you can change the number of iterations, learning rate, etc here. Also you can increase verbosity to see per-iteration loss values.
@@ -125,6 +125,5 @@ for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)',
     lb, ub = lirpa_model.compute_bounds(x=(image,), method=method.split()[0], C=C)
     for i in range(N):
         print("Image {} top-1 prediction {} ground-truth {}".format(i, label[i], true_label[i]))
-        print("margin bounds: delta_f_{j} >= {l:8.3f}".format(j=true_label[i], l=torch.min(lb, dim=1)[0][i]))
-    print()
-'''
+        print("lowest margin >= {l:8.3f}".format(l=torch.min(lb, dim=1)[0][i]))
+
