@@ -297,9 +297,9 @@ class PerturbationLpNorm(Perturbation):
                 nominal=nominal, lower_offset=lower_offset, upper_offset=upper_offset), x, None
         batch_size = x.shape[0]
         dim = x.reshape(batch_size, -1).shape[-1]
-        eye = torch.eye(dim).to(x).unsqueeze(0).repeat(batch_size, 3, 1, 1)
-        lw = eye.reshape(batch_size, 3, dim, *x.shape[1:])
-        lb = torch.zeros_like(x).to(x.device).unsqueeze(1).repeat(1, 3, *([1] * len(x.shape[1:])))
+        eye = torch.eye(dim).to(x).unsqueeze(0).repeat(batch_size, 4, 1, 1)
+        lw = eye.reshape(batch_size, 4, dim, *x.shape[1:])
+        lb = torch.zeros_like(x).to(x.device).unsqueeze(1).repeat(1, 4, *([1] * len(x.shape[1:])))
         # Now the shape of lb is (batch_size, path_num, node_dim)
         uw, ub = lw.clone(), lb.clone()     
         return LinearBound(

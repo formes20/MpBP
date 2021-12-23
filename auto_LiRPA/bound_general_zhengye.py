@@ -1470,9 +1470,9 @@ class BoundedModule(nn.Module):
             if final.output_shape is None:
                 raise ValueError('C is not provided while node {} has no default shape'.format(final.shape))
             dim_output = int(np.prod(final.output_shape[1:]))
-            C = torch.eye(dim_output, device=self.device).unsqueeze(0).unsqueeze(1).repeat(batch_size, 3, 1, 1)  # TODO: use an eyeC object here.
+            C = torch.eye(dim_output, device=self.device).unsqueeze(0).unsqueeze(1).repeat(batch_size, 4, 1, 1)  # TODO: use an eyeC object here.
         else:
-            C = C.unsqueeze(1).repeat(1, 3, 1, 1)
+            C = C.unsqueeze(1).repeat(1, 4, 1, 1)
             # Now the shape of C is (batch, path, output_dim, spec)
 
         # check whether weights are perturbed and set nonlinear for the BoundMatMul operation
@@ -1583,7 +1583,7 @@ class BoundedModule(nn.Module):
                                                 newC = eyeC([batch_size, dim, *node.output_shape[1:]], self.device)
                                             """
                                         else:
-                                            newC = eyeC([batch_size, 3, dim, *node.output_shape[1:]], self.device)
+                                            newC = eyeC([batch_size, 4, dim, *node.output_shape[1:]], self.device)
                                     elif (isinstance(node, BoundConv) or isinstance(node,
                                                                                     BoundBatchNormalization)) and node.mode == "patches":
                                         # import pdb; pdb.set_trace()
@@ -1622,8 +1622,8 @@ class BoundedModule(nn.Module):
                                             if dim > 1000:
                                                 warnings.warn(f"Creating an identity matrix with size {dim}x{dim} for node {node}. This may indicate poor performance for bound computation. If you see this message on a small network please submit a bug report.", stacklevel=2)
                                             newC = torch.eye(dim, device=self.device) \
-                                                .unsqueeze(0).unsqueeze(1).repeat(batch_size, 3, 1, 1) \
-                                                .view(batch_size, 3, dim, *node.output_shape[1:])
+                                                .unsqueeze(0).unsqueeze(1).repeat(batch_size, 4, 1, 1) \
+                                                .view(batch_size, 4, dim, *node.output_shape[1:])
                                     # print('Creating new C', type(newC), 'for', node)
                                     if False:  # TODO: only return A_dict of final layer
                                         _, _, A_dict = self._backward_general(C=newC, node=node, root=root,
@@ -2079,9 +2079,9 @@ class BoundedModule(nn.Module):
                 uA = root[i].uA
                     
             if not isinstance(root[i].lA, eyeC) and not isinstance(root[i].lA, Patches):
-                lA = root[i].lA.reshape(output_dim, batch_size, 3, -1).transpose(0, 1).transpose(1, 2) if bound_lower else None
+                lA = root[i].lA.reshape(output_dim, batch_size, 4, -1).transpose(0, 1).transpose(1, 2) if bound_lower else None
             if not isinstance(root[i].uA, eyeC) and not isinstance(root[i].lA, Patches):
-                uA = root[i].uA.reshape(output_dim, batch_size, 3, -1).transpose(0, 1).transpose(1, 2) if bound_upper else None
+                uA = root[i].uA.reshape(output_dim, batch_size, 4, -1).transpose(0, 1).transpose(1, 2) if bound_upper else None
             if hasattr(root[i], 'perturbation') and root[i].perturbation is not None:
                 if isinstance(root[i], BoundParams):
                     # add batch_size dim for weights node
@@ -2119,12 +2119,12 @@ class BoundedModule(nn.Module):
                     ub = ub + uA.matmul(root[i].forward_value.view(-1, 1)).squeeze(-1) if bound_upper else None
         # lb is lower bound rather lower bias.
         if bound_lower:
-            node.lower = lb.view(batch_size, 3, *output_shape).max(1)[0].squeeze(1)
+            node.lower = lb.view(batch_size, 4, *output_shape).max(1)[0].squeeze(1)
         else:
             node.lower = None
 
         if bound_upper:
-            node.upper = ub.view(batch_size, 3, *output_shape).min(1)[0].squeeze(1)
+            node.upper = ub.view(batch_size, 4, *output_shape).min(1)[0].squeeze(1)
         else:
             node.upper = None
 
@@ -2185,8 +2185,8 @@ class BoundedModule(nn.Module):
                 prev_dim_in = 0
                 batch_size = lw.shape[0]
                 assert (lw.ndim > 1)
-                lA = lw.reshape(batch_size, 3, dim_in, -1).transpose(2, 3)
-                uA = uw.reshape(batch_size, 3, dim_in, -1).transpose(2, 3)
+                lA = lw.reshape(batch_size, 4, dim_in, -1).transpose(2, 3)
+                uA = uw.reshape(batch_size, 4, dim_in, -1).transpose(2, 3)
                 for i in range(len(root)):
                     if hasattr(root[i], 'perturbation') and root[i].perturbation is not None:
                         _lA = lA[:, :, :, prev_dim_in:(prev_dim_in + root[i].dim)]
@@ -2222,14 +2222,14 @@ class BoundedModule(nn.Module):
                 dtype = root[i].linear.lw.dtype
                 root[i].linear = root[i].linear._replace(
                     lw=torch.cat([
-                        torch.zeros(shape[0], 3, prev_dim_in, *shape[3:], device=device, dtype=dtype),
+                        torch.zeros(shape[0], 4, prev_dim_in, *shape[3:], device=device, dtype=dtype),
                         root[i].linear.lw,
-                        torch.zeros(shape[0], 3, dim_in - shape[2], *shape[3:], device=device, dtype=dtype)
+                        torch.zeros(shape[0], 4, dim_in - shape[2], *shape[3:], device=device, dtype=dtype)
                     ], dim=2),
                     uw=torch.cat([
-                        torch.zeros(shape[0], 3, prev_dim_in, *shape[3:], device=device, dtype=dtype),
+                        torch.zeros(shape[0], 4, prev_dim_in, *shape[3:], device=device, dtype=dtype),
                         root[i].linear.uw,
-                        torch.zeros(shape[0], 3, dim_in - shape[2] - prev_dim_in, *shape[3:], device=device, dtype=dtype)
+                        torch.zeros(shape[0], 4, dim_in - shape[2] - prev_dim_in, *shape[3:], device=device, dtype=dtype)
                     ], dim=2)
                 )
                 if i >= self.num_global_inputs:

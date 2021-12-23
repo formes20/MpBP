@@ -117,8 +117,8 @@ target_labels = (target_labels + groundtruth) % n_classes
 C.scatter_(dim=2, index=target_labels, value=-1.0)
 # print('Computing bounds with a specification matrix:\n', C)
 
-# for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)']:
-for method in ['backward (CROWN)']:
+for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)']:
+# for method in ['backward (CROWN)']:
     print("Bounding method:", method)
     if 'Optimized' in method:
         # For optimized bound, you can change the number of iterations, learning rate, etc here. Also you can increase verbosity to see per-iteration loss values.
@@ -126,5 +126,5 @@ for method in ['backward (CROWN)']:
     lb, ub = lirpa_model.compute_bounds(x=(image,), method=method.split()[0], C=C)
     for i in range(N):
         print("Image {} top-1 prediction {} ground-truth {}".format(i, label[i], true_label[i]))
-        print("lowest margin >= {l:8.3f}".format(l=torch.min(lb, dim=1)[0][i]))
+        print("lowest margin >= {l:10.5f}".format(l=torch.min(lb, dim=1)[0][i]))
 

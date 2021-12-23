@@ -375,9 +375,9 @@ class Bound(nn.Module):
                     np.prod(A.shape[self.batch_dim + 2:3]).astype(np.int32),
                     np.prod(A.shape[self.batch_dim + 3:]).astype(np.int32)
                 ]
-                A = A.reshape(*A_shape).permute(2, 3, 0, 1, 4).reshape(batch_size, 3, output_dim, -1)
+                A = A.reshape(*A_shape).permute(2, 3, 0, 1, 4).reshape(batch_size, 4, output_dim, -1)
                 # Now the shape of A is (batch_size, path_num, output_dim, *standard_shape).
-                bias = bias.reshape(*A_shape[1:]).permute(1, 2, 0, 3).reshape(batch_size, 3, -1, 1)
+                bias = bias.reshape(*A_shape[1:]).permute(1, 2, 0, 3).reshape(batch_size, 4, -1, 1)
                 # FIXME avoid .transpose(0, 1) back
                 bias_new = A.matmul(bias).squeeze(-1).permute(2, 0, 1)
             else:
@@ -493,10 +493,10 @@ class BoundReshape(Bound):
 
     def bound_forward(self, dim_in, x, shape):
         batch_size = x.lw.shape[0]
-        lw = x.lw.reshape(batch_size, 3, dim_in, *self.shape[1:])
-        uw = x.uw.reshape(batch_size, 3, dim_in, *self.shape[1:])
-        lb = x.lb.reshape(batch_size, 3, *self.shape[1:])
-        ub = x.ub.reshape(batch_size, 3, *self.shape[1:])
+        lw = x.lw.reshape(batch_size, 4, dim_in, *self.shape[1:])
+        uw = x.uw.reshape(batch_size, 4, dim_in, *self.shape[1:])
+        lb = x.lb.reshape(batch_size, 4, *self.shape[1:])
+        ub = x.ub.reshape(batch_size, 4, *self.shape[1:])
         return LinearBound(lw, lb, uw, ub)
 
     def interval_propagate(self, *v):
@@ -802,12 +802,11 @@ class BoundLinear(Bound):
             if isinstance(last_lA, eyeC) and isinstance(last_uA, eyeC):
                 # Use this layer's W as the next bound matrices.
                 # Duplicate the batch dimension. Other dimensions are kept 1.
-                # TODO: why duplicate the batch dimension?
                 # Not perturbed, so we can use either lower or upper.
-                lA_x = uA_x = input_lb[1].unsqueeze(1).unsqueeze(2).repeat([1, batch_size, 3] + [1] * (input_lb[1].ndim - 1))
+                lA_x = uA_x = input_lb[1].unsqueeze(1).unsqueeze(2).repeat([1, batch_size, 4] + [1] * (input_lb[1].ndim - 1))
                 # Bias will be directly added to output.
                 if has_bias:
-                    lbias = ubias = input_lb[2].unsqueeze(1).unsqueeze(2).repeat(1, batch_size, 3)
+                    lbias = ubias = input_lb[2].unsqueeze(1).unsqueeze(2).repeat(1, batch_size, 4)
             elif isinstance(last_lA, OneHotC) or isinstance(last_uA, OneHotC):
                 # We need to select several rows from the weight matrix (its shape is output_size * input_size).
                 lA_x, lbias = self.onehot_mult(input_lb[1], input_lb[2] if has_bias else None, last_lA, batch_size)
@@ -1597,10 +1596,10 @@ class BoundConv(Bound):
         center_b = F.conv2d(
             mid_b.reshape(shape_bconv), weight, bias,
             self.stride, self.padding, self.dilation, self.groups)
-        deviation_w = deviation_w.reshape(w_shape[0], 3, -1, *deviation_w.shape[1:])
-        center_w = center_w.reshape(w_shape[0], 3, -1, *center_w.shape[1:])
-        deviation_b = deviation_b.reshape(b_shape[0], 3, *deviation_b.shape[1:])
-        center_b = center_b.reshape(b_shape[0], 3, *center_b.shape[1:])
+        deviation_w = deviation_w.reshape(w_shape[0], 4, -1, *deviation_w.shape[1:])
+        center_w = center_w.reshape(w_shape[0], 4, -1, *center_w.shape[1:])
+        deviation_b = deviation_b.reshape(b_shape[0], 4, *deviation_b.shape[1:])
+        center_b = center_b.reshape(b_shape[0], 4, *center_b.shape[1:])
 
         return LinearBound(
             lw = center_w - deviation_w,
@@ -1922,13 +1921,13 @@ class BoundActivation(Bound):
     def _init_masks(self, x):
         # mask_pos: (bool tensor) Mask according to concrete bounds lower & upper.
         bound_shape = x.lower.shape
-        self.mask_pos = torch.ge(x.lower, 0).to(torch.float).unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
-        self.mask_neg = torch.le(x.upper, 0).to(torch.float).unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
+        self.mask_pos = torch.ge(x.lower, 0).to(torch.float).unsqueeze(1).repeat(1, 4, *([1] * len(bound_shape[1:])))
+        self.mask_neg = torch.le(x.upper, 0).to(torch.float).unsqueeze(1).repeat(1, 4, *([1] * len(bound_shape[1:])))
         self.mask_both = 1 - self.mask_pos - self.mask_neg
 
     def _init_linear(self, x, dim_opt=None):
         self._init_masks(x)
-        self.lw = torch.zeros_like(x.lower).unsqueeze(1).repeat(1, 3, 1)
+        self.lw = torch.zeros_like(x.lower).unsqueeze(1).repeat(1, 4, 1)
         self.lb = self.lw.clone()
         self.uw = self.lw.clone()
         self.ub = self.lw.clone()
@@ -2072,7 +2071,7 @@ class BoundOptimizableActivation(BoundActivation):
         if self.opt_stage == 'opt' and dim_opt:
             self.lw = torch.zeros(2, dim_opt, *x.lower.shape).to(x.lower)     
         else:
-            self.lw = torch.zeros_like(x.lower).unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
+            self.lw = torch.zeros_like(x.lower).unsqueeze(1).repeat(1, 4, *([1] * len(bound_shape[1:])))
         self.lb = self.lw.clone()
         self.uw = self.lw.clone()
         self.ub = self.lw.clone()        
@@ -2170,7 +2169,7 @@ class BoundRelu(BoundOptimizableActivation):
         super().__init__(input_name, name, ori_name, attr, inputs, output_index, options, device)
         self.options = options
         # self.relu_options = options.get('relu', 'adaptive')
-        self.relu_options = options.get('relu', 'multi-bound')
+        self.relu_options = options.get('relu', 'multi-path')
         self.beta = self.beta_mask = self.masked_beta = self.sparse_beta = None
         self.split_beta_used = False
         self.history_beta_used = False
@@ -2207,7 +2206,7 @@ class BoundRelu(BoundOptimizableActivation):
         # FIXME maybe avoid using `mask` which looks inefficient
         # m = torch.min((x.lower + x.upper) / 2, x.lower + 0.99)
         # For determined alpha
-        expanded_x_lower = x.lower.unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
+        expanded_x_lower = x.lower.unsqueeze(1).repeat(1, 4, *([1] * len(bound_shape[1:])))
         self._add_linear(mask=self.mask_neg, type='lower',
                          k=torch.zeros_like(expanded_x_lower), x0=0, y0=0)
         self._add_linear(mask=self.mask_neg, type='upper',
@@ -2222,20 +2221,20 @@ class BoundRelu(BoundOptimizableActivation):
         r = (x.upper - x.lower).clamp(min=delta)
         upper_k = x.upper / r + delta / r
         self._add_linear(mask=self.mask_both, type='upper',
-                         k=upper_k.unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:]))), x0=expanded_x_lower, y0=0)
+                         k=upper_k.unsqueeze(1).repeat(1, 4, *([1] * len(bound_shape[1:]))), x0=expanded_x_lower, y0=0)
         if self.relu_options == "same-slope":
             lower_k = upper_k
         elif self.relu_options == "zero-lb":
             lower_k = torch.zeros_like(upper_k)
         elif self.relu_options == "one-lb":
             lower_k = torch.ones_like(upper_k)
-        elif self.relu_options == 'multi-bound':
-            # Use paths: upper_k, zero-lb, adaptive
+        elif self.relu_options == 'multi-path':
+            # Use paths: upper_k, 0, 1, adaptive
             tmp_k_1 = upper_k.unsqueeze(1)
             tmp_k_2 = torch.zeros_like(tmp_k_1)
-            # tmp_k_3 = torch.ones_like(tmp_k_1)
-            tmp_k_3 = torch.gt(torch.abs(x.upper), torch.abs(x.lower)).unsqueeze(1).to(torch.float)
-            lower_k = torch.cat([tmp_k_1, tmp_k_2, tmp_k_3], dim=1)
+            tmp_k_3 = torch.ones_like(tmp_k_1)
+            tmp_k_4 = torch.gt(torch.abs(x.upper), torch.abs(x.lower)).unsqueeze(1).to(torch.float)
+            lower_k = torch.cat([tmp_k_1, tmp_k_2, tmp_k_3, tmp_k_4], dim=1)
         elif self.opt_stage == 'opt':
             # Each actual alpha in the forward mode has shape (batch_size, *relu_node_shape]. 
             # But self.alpha has shape (2, output_shape, batch_size, *relu_node_shape]
@@ -2262,12 +2261,12 @@ class BoundRelu(BoundOptimizableActivation):
             #         x.lower = x.lower * (self.beta_mask != 1).to(torch.float32)
             #         x.upper = x.upper * (self.beta_mask != -1).to(torch.float32)
             bound_shape = x.lower.shape
-            lb_r = x.lower.clamp(max=0).unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
-            ub_r = x.upper.clamp(min=0).unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
+            lb_r = x.lower.clamp(max=0).unsqueeze(1).repeat(1, 4, *([1] * len(bound_shape[1:])))
+            ub_r = x.upper.clamp(min=0).unsqueeze(1).repeat(1, 4, *([1] * len(bound_shape[1:])))
         else:
             bound_shape = self.lower.shape
-            lb_r = self.lower.clamp(max=0).unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
-            ub_r = self.upper.clamp(min=0).unsqueeze(1).repeat(1, 3, *([1] * len(bound_shape[1:])))
+            lb_r = self.lower.clamp(max=0).unsqueeze(1).repeat(1, 4, *([1] * len(bound_shape[1:])))
+            ub_r = self.upper.clamp(min=0).unsqueeze(1).repeat(1, 4, *([1] * len(bound_shape[1:])))
 
         self.I = ((lb_r != 0) * (ub_r != 0)).detach()  # unstable neurons
         # print('unstable neurons:', self.I.sum())
@@ -2295,13 +2294,13 @@ class BoundRelu(BoundOptimizableActivation):
             lower_d = (upper_d > 0.0).float()
         elif self.relu_options == "reversed-adaptive":
             lower_d = (upper_d < 0.5).float()
-        elif self.relu_options == 'multi-bound':
-            # Use paths: upper_d, 0, adaptive
+        elif self.relu_options == 'multi-path':
+            # Use paths: upper_d, 0, 1, adaptive
             tmp_d_1 = upper_d.narrow(1, 0, 1)
             tmp_d_2 = (upper_d >= 1.0).float().narrow(1, 0, 1)
-            tmp_d_3 = (upper_d > 0.5).float().narrow(1, 0, 1)
-            # tmp_d_3 = (upper_d > 0.0).float().narrow(1, 0, 1)
-            lower_d = torch.cat([tmp_d_1, tmp_d_2, tmp_d_3], dim=1)
+            tmp_d_3 = (upper_d > 0.0).float().narrow(1, 0, 1)
+            tmp_d_4 = (upper_d > 0.5).float().narrow(1, 0, 1)
+            lower_d = torch.cat([tmp_d_1, tmp_d_2, tmp_d_3, tmp_d_4], dim=1)
         elif self.opt_stage == 'opt':
             # Alpha-CROWN.
             lower_d = None
