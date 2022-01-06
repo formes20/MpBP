@@ -1,0 +1,223 @@
+MNIST_FFNN_10X80 MBP results:
+Verified robust radius: 0.011 ++
+Verified robust radius: 0.026 +
+Verified robust radius: 0.008
+Verified robust radius: 0.015
+Verified robust radius: 0.012 +
+Verified robust radius: 0.011
+Verified robust radius: 0.006
+Verified robust radius: 0.001 +
+Verified robust radius: 0.008 ++
+Verified robust radius: 0.015 +
+Verified robust radius: 0.021
+Verified robust radius: 0.021 +
+Verified robust radius: 0.015
+Verified robust radius: 0.023
+Verified robust radius: 0.011 +
+Verified robust radius: 0.016 +++
+Verified robust radius: 0.012 +
+Verified robust radius: 0.014
+Verified robust radius: 0.002
+Verified robust radius: 0.015
+Verified robust radius: 0.004 +
+Verified robust radius: 0.016
+Verified robust radius: 0.021
+Verified robust radius: 0.02
+Verified robust radius: 0.012
+Verified robust radius: 0.019
+Verified robust radius: 0.012 +
+Verified robust radius: 0.02
+Verified robust radius: 0.018 +
+Verified robust radius: 0.01
+Verified robust radius: 0.026 +
+Verified robust radius: 0.007
+Verified robust radius: 0.029 +
+Verified robust radius: 0.008 +
+Verified robust radius: 0.017
+Verified robust radius: 0.027 +
+Verified robust radius: 0.012 ++
+Verified robust radius: 0.01
+Verified robust radius: 0.011 ++
+Verified robust radius: 0.011
+Verified robust radius: 0.007
+Verified robust radius: 0.013 +
+Verified robust radius: 0.012 +
+Verified robust radius: 0.012 +
+Verified robust radius: 0.015 +
+Verified robust radius: 0.011
+Verified robust radius: 0.01
+Verified robust radius: 0.017
+Verified robust radius: 0.021 +
+Verified robust radius: 0.019 +
+Verified robust radius: 0.018
+Verified robust radius: 0.023 +
+Verified robust radius: 0.016
+Verified robust radius: 0.014 +
+Verified robust radius: 0.027 +
+Verified robust radius: 0.014 +
+Verified robust radius: 0.021 +
+Verified robust radius: 0.011 +
+Verified robust radius: 0.017
+Verified robust radius: 0.011 +
+Verified robust radius: 0.028 ++
+Verified robust radius: 0.001
+Verified robust radius: 0.004
+Verified robust radius: 0.013 +
+Verified robust radius: 0.02 +
+Verified robust radius: 0.006
+Verified robust radius: 0.018 +
+Verified robust radius: 0.017 ++
+Verified robust radius: 0.026 +
+Verified robust radius: 0.021
+Verified robust radius: 0.02 +
+Verified robust radius: 0.033 +++
+Verified robust radius: 0.02 +
+Verified robust radius: 0.016 +
+Verified robust radius: 0.009
+Verified robust radius: 0.02
+Verified robust radius: 0.019 +
+Verified robust radius: 0.024 +
+Verified robust radius: 0.009
+Verified robust radius: 0.012
+Verified robust radius: 0.013
+Verified robust radius: 0.015
+Verified robust radius: 0.028 ++
+Verified robust radius: 0.016 +
+Verified robust radius: 0.016 ++
+Verified robust radius: 0.028
+Verified robust radius: 0.018 +
+Verified robust radius: 0.023
+Verified robust radius: 0.02 +
+Verified robust radius: 0.009
+Verified robust radius: 0.022 +
+Verified robust radius: 0.02
+Verified robust radius: 0.004 +
+Verified robust radius: 0.02 +
+Verified robust radius: 0.014
+Verified robust radius: 0.019
+Verified robust radius: 0.002
+Verified robust radius: 0.022 ++
+Verified robust radius: 0.014
+Verified robust radius: 0.02
+
+MNIST_FFNN_10X80 Backward LiRPA results:
+Verified robust radius: 0.009
+Verified robust radius: 0.025
+Verified robust radius: 0.008
+Verified robust radius: 0.015
+Verified robust radius: 0.011
+Verified robust radius: 0.011
+Verified robust radius: 0.006
+Verified robust radius: 0.0
+Verified robust radius: 0.006
+Verified robust radius: 0.014
+Verified robust radius: 0.021
+Verified robust radius: 0.02
+Verified robust radius: 0.015
+Verified robust radius: 0.023
+Verified robust radius: 0.01
+Verified robust radius: 0.013
+Verified robust radius: 0.011
+Verified robust radius: 0.014
+Verified robust radius: 0.002
+Verified robust radius: 0.015
+Verified robust radius: 0.003
+Verified robust radius: 0.016
+Verified robust radius: 0.021
+Verified robust radius: 0.02
+Verified robust radius: 0.012
+Verified robust radius: 0.019
+Verified robust radius: 0.011
+Verified robust radius: 0.02
+Verified robust radius: 0.017
+Verified robust radius: 0.01
+Verified robust radius: 0.025
+Verified robust radius: 0.007
+Verified robust radius: 0.028
+Verified robust radius: 0.007
+Verified robust radius: 0.017
+Verified robust radius: 0.026
+Verified robust radius: 0.01
+Verified robust radius: 0.01
+Verified robust radius: 0.009
+Verified robust radius: 0.011
+Verified robust radius: 0.007
+Verified robust radius: 0.012
+Verified robust radius: 0.011
+Verified robust radius: 0.011
+Verified robust radius: 0.014
+Verified robust radius: 0.011
+Verified robust radius: 0.01
+Verified robust radius: 0.017
+Verified robust radius: 0.02
+Verified robust radius: 0.018
+Verified robust radius: 0.018
+Verified robust radius: 0.022
+Verified robust radius: 0.016
+Verified robust radius: 0.013
+Verified robust radius: 0.026
+Verified robust radius: 0.013
+Verified robust radius: 0.02
+Verified robust radius: 0.01
+Verified robust radius: 0.017
+Verified robust radius: 0.01
+Verified robust radius: 0.026
+Verified robust radius: 0.001
+Verified robust radius: 0.004
+Verified robust radius: 0.012
+Verified robust radius: 0.019
+Verified robust radius: 0.006
+Verified robust radius: 0.017
+Verified robust radius: 0.015
+Verified robust radius: 0.025
+Verified robust radius: 0.021
+Verified robust radius: 0.019
+Verified robust radius: 0.03
+Verified robust radius: 0.019
+Verified robust radius: 0.015
+Verified robust radius: 0.009
+Verified robust radius: 0.02
+Verified robust radius: 0.018
+Verified robust radius: 0.023
+Verified robust radius: 0.009
+Verified robust radius: 0.012
+Verified robust radius: 0.013
+Verified robust radius: 0.015
+Verified robust radius: 0.026
+Verified robust radius: 0.015
+Verified robust radius: 0.014
+Verified robust radius: 0.028
+Verified robust radius: 0.017
+Verified robust radius: 0.023
+Verified robust radius: 0.019
+Verified robust radius: 0.009
+Verified robust radius: 0.021
+Verified robust radius: 0.02
+Verified robust radius: 0.003
+Verified robust radius: 0.019
+Verified robust radius: 0.014
+Verified robust radius: 0.019
+Verified robust radius: 0.002
+Verified robust radius: 0.02
+Verified robust radius: 0.014
+Verified robust radius: 0.02
+
+
+================================================
+Appendix:
+
+Property_id		LP-ALL		AbstraCMP	DeepPoly
+------------------------------------------------
+15				0.030(8)    0.028       0.025
+18              0.020       0.018       0.017
+20              0.017(0)    0.015       0.014
+23		        0.027		0.025		0.023
+25              0.044       0.038       0.035
+28              0.036       0.033       0.030
+30		        0.035		0.032		0.030
+
+79              0.029       0.026       0.023
+93              0.033       0.030       0.028
+97              0.018       0.016       0.013
+
+Property 20: LP-ALL time: 147595.00812721252 s

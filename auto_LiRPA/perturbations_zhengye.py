@@ -162,8 +162,12 @@ class PerturbationLpNorm(Perturbation):
 
             if self.norm == np.inf:
                 # For Linfinity distortion, when an upper and lower bound is given, we use them instead of eps.
-                x_L = x - self.eps if self.x_L is None else self.x_L
-                x_U = x + self.eps if self.x_U is None else self.x_U
+
+                # Trim perturbed input range to [0, 1], for experiments only, sync with line 286
+                x_L = torch.maximum(x - self.eps, torch.zeros_like(x)) if self.x_L is None else self.x_L
+                x_U = torch.minimum(x + self.eps, torch.ones_like(x)) if self.x_U is None else self.x_U
+                # x_L = x - self.eps if self.x_L is None else self.x_L
+                # x_U = x + self.eps if self.x_U is None else self.x_U
                 x_ub = x_U.reshape(x_U.shape[0], -1, 1)
                 x_lb = x_L.reshape(x_L.shape[0], -1, 1)
                 # Find the uppwer and lower bound similarly to IBP.
@@ -279,8 +283,12 @@ class PerturbationLpNorm(Perturbation):
 
     def init(self, x, aux=None, forward=False):
         if self.norm == np.inf:
-            x_L = x - self.eps if self.x_L is None else self.x_L
-            x_U = x + self.eps if self.x_U is None else self.x_U
+            # Trim perturbed input range to [0, 1], for experiments only
+            x_L = torch.maximum(x - self.eps, torch.zeros_like(x)) if self.x_L is None else self.x_L
+            x_U = torch.minimum(x + self.eps, torch.ones_like(x)) if self.x_U is None else self.x_U
+
+            # x_L = x - self.eps if self.x_L is None else self.x_L
+            # x_U = x + self.eps if self.x_U is None else self.x_U
         else:
             # For other norms, we pass in the BoundedTensor objects directly.
             x_L = x

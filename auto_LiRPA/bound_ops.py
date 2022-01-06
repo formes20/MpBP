@@ -2163,8 +2163,8 @@ class BoundRelu(BoundOptimizableActivation):
     def __init__(self, input_name, name, ori_name, attr, inputs, output_index, options, device):
         super().__init__(input_name, name, ori_name, attr, inputs, output_index, options, device)
         self.options = options
-        # self.relu_options = options.get('relu', 'adaptive')
-        self.relu_options = options.get('relu', 'zero-lb')
+        self.relu_options = options.get('relu', 'adaptive')
+        # self.relu_options = options.get('relu', 'zero-lb')
         self.beta = self.beta_mask = self.masked_beta = self.sparse_beta = None
         self.split_beta_used = False
         self.history_beta_used = False

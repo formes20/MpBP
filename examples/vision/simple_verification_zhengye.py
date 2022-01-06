@@ -7,33 +7,43 @@ import os
 import torch
 import torch.nn as nn
 import torchvision
-import torch.nn.functional as F
 
-# from auto_LiRPA.bound_general import BoundedModule
-# from auto_LiRPA import BoundedTensor
-# from auto_LiRPA.perturbations import PerturbationLpNorm
-
-from auto_LiRPA.bound_general_zhengye import BoundedModule
+from auto_LiRPA.bound_general import BoundedModule
 from auto_LiRPA import BoundedTensor
-from auto_LiRPA.perturbations_zhengye import PerturbationLpNorm
+from auto_LiRPA.perturbations import PerturbationLpNorm
+
+# from auto_LiRPA.bound_general_zhengye import BoundedModule
+# from auto_LiRPA import BoundedTensor
+# from auto_LiRPA.perturbations_zhengye import PerturbationLpNorm
 
 ### Step 1: Define computational graph
 
 # Models defined by nn.Module.
-class MNIST_FFNN(nn.Module):
-    def __init__(self):
-        super(MNIST_FFNN, self).__init__()
-        self.linear1 = torch.nn.Linear(784, 100)
-        self.linear2 = torch.nn.Linear(100, 100)
-        self.linear3 = torch.nn.Linear(100, 100)
-        self.linear4 = torch.nn.Linear(100, 10)
-
-    def forward(self, x):
-        x = F.relu(self.linear1(x))
-        x = F.relu(self.linear2(x))
-        x = F.relu(self.linear3(x))
-        x = self.linear4(x)
-        return x
+def mnist_ffnn():
+    model = nn.Sequential(
+        nn.Linear(784, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 10)
+    )
+    return model
 
 class Flatten(nn.Module):
     def forward(self, x):
@@ -53,9 +63,9 @@ def mnist_conv():
     )
     return model
 
-model = mnist_conv()
+model = mnist_ffnn()
 # Optionally, load the pretrained weights.
-checkpoint = torch.load(os.path.join(os.path.dirname(__file__), "./pretrain/mnist_a_adv.pth"), map_location=torch.device('cpu'))
+checkpoint = torch.load(os.path.join(os.path.dirname(__file__), "./pretrain/mnist_ffnn_10x80.pth"), map_location=torch.device('cpu'))
 model.load_state_dict(checkpoint)
 
 
@@ -65,7 +75,7 @@ test_data = torchvision.datasets.MNIST("./data", train=False, download=False, tr
 N = 10
 n_classes = 10
 # Adjust to model input shape!!!
-image = test_data.data[:N].reshape(N, 1, 28, 28)
+image = test_data.data[:N].reshape(N, 784)
 # Convert to float between 0. and 1.
 image = image.to(torch.float32) / 255.0
 true_label = test_data.targets[:N]
@@ -80,7 +90,7 @@ lirpa_model = BoundedModule(model, torch.empty_like(image), device=image.device)
 print('Running on', image.device)
 
 ### Step 4: Compute bounds using LiRPA given a perturbation
-eps = 0.1
+eps = 0.01
 norm = float("inf")
 ptb = PerturbationLpNorm(norm=norm, eps=eps)
 image = BoundedTensor(image, ptb)
@@ -90,7 +100,8 @@ label = torch.argmax(pred, dim=1).cpu().detach().numpy()
 
 ### Step 5: Compute bounds for final output
 '''
-for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)']:
+# for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)']:
+for method in ['backward (CROWN)']:
     print("Bounding method:", method)
     lb, ub = lirpa_model.compute_bounds(x=(image,), method=method.split()[0])
 
@@ -117,8 +128,9 @@ target_labels = (target_labels + groundtruth) % n_classes
 C.scatter_(dim=2, index=target_labels, value=-1.0)
 # print('Computing bounds with a specification matrix:\n', C)
 
-for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)']:
-# for method in ['backward (CROWN)']:
+# for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)']:
+# for method in ['forward']:
+for method in ['backward (CROWN)']:
     print("Bounding method:", method)
     if 'Optimized' in method:
         # For optimized bound, you can change the number of iterations, learning rate, etc here. Also you can increase verbosity to see per-iteration loss values.
