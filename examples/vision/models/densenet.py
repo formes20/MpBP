@@ -2,7 +2,6 @@
 https://github.com/kuangliu/pytorch-cifar
 '''
 
-
 import math
 import torch
 import torch.nn as nn
@@ -21,7 +20,7 @@ class Bottleneck(nn.Module):
         out = self.conv2(F.relu(self.bn2(out)))
         # out = self.conv1(F.relu(x))
         # out = self.conv2(F.relu(out))
-        out = torch.cat([out,x], 1)
+        out = torch.cat([out, x], 1)
         return out
 
 

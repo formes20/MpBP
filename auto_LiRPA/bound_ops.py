@@ -699,7 +699,6 @@ class BoundBuffers(BoundInput):
         return self.buffer
 
 
-# TODO: START HERE
 class BoundLinear(Bound):
     def __init__(self, input_name, name, ori_name, attr, inputs, output_index, options, device):
         # Gemm:

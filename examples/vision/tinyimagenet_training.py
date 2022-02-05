@@ -242,7 +242,6 @@ def main(args):
                                       ]))
     test_data = datasets.ImageFolder(args.data_dir + '/val',
                                      transform=transforms.Compose([
-                                         # transforms.RandomResizedCrop(64, scale=(0.875, 0.875), ratio=(1., 1.)),
                                          transforms.CenterCrop(56),
                                          transforms.ToTensor(),
                                          normalize]))
