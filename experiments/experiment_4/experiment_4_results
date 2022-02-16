@@ -1,0 +1,382 @@
+MNIST_FFNN_10X80 MultipathBP results:
+Verified robust radius: 0.011 ++
+Verified robust radius: 0.026 +
+Verified robust radius: 0.008
+Verified robust radius: 0.015
+Verified robust radius: 0.012 +
+Verified robust radius: 0.011
+Verified robust radius: 0.006
+Verified robust radius: 0.001 +
+Verified robust radius: 0.008 ++
+Verified robust radius: 0.015 +
+Verified robust radius: 0.021
+Verified robust radius: 0.021 +
+Verified robust radius: 0.015
+Verified robust radius: 0.023
+Verified robust radius: 0.011 +
+Verified robust radius: 0.016 +++
+Verified robust radius: 0.012 +
+Verified robust radius: 0.014
+Verified robust radius: 0.002
+Verified robust radius: 0.015
+Verified robust radius: 0.004 +
+Verified robust radius: 0.016
+Verified robust radius: 0.021
+Verified robust radius: 0.02
+Verified robust radius: 0.012
+Verified robust radius: 0.019
+Verified robust radius: 0.012 +
+Verified robust radius: 0.02
+Verified robust radius: 0.018 +
+Verified robust radius: 0.01
+Verified robust radius: 0.026 +
+Verified robust radius: 0.007
+Verified robust radius: 0.029 +
+Verified robust radius: 0.008 +
+Verified robust radius: 0.017
+Verified robust radius: 0.027 +
+Verified robust radius: 0.012 ++
+Verified robust radius: 0.01
+Verified robust radius: 0.011 ++
+Verified robust radius: 0.011
+Verified robust radius: 0.007
+Verified robust radius: 0.013 +
+Verified robust radius: 0.012 +
+Verified robust radius: 0.012 +
+Verified robust radius: 0.015 +
+Verified robust radius: 0.011
+Verified robust radius: 0.01
+Verified robust radius: 0.017
+Verified robust radius: 0.021 +
+Verified robust radius: 0.019 +
+Verified robust radius: 0.018
+Verified robust radius: 0.023 +
+Verified robust radius: 0.016
+Verified robust radius: 0.014 +
+Verified robust radius: 0.027 +
+Verified robust radius: 0.014 +
+Verified robust radius: 0.021 +
+Verified robust radius: 0.011 +
+Verified robust radius: 0.017
+Verified robust radius: 0.011 +
+Verified robust radius: 0.028 ++
+Verified robust radius: 0.001
+Verified robust radius: 0.004
+Verified robust radius: 0.013 +
+Verified robust radius: 0.02 +
+Verified robust radius: 0.006
+Verified robust radius: 0.018 +
+Verified robust radius: 0.017 ++
+Verified robust radius: 0.026 +
+Verified robust radius: 0.021
+Verified robust radius: 0.02 +
+Verified robust radius: 0.033 +++
+Verified robust radius: 0.02 +
+Verified robust radius: 0.016 +
+Verified robust radius: 0.009
+Verified robust radius: 0.02
+Verified robust radius: 0.019 +
+Verified robust radius: 0.024 +
+Verified robust radius: 0.009
+Verified robust radius: 0.012
+Verified robust radius: 0.013
+Verified robust radius: 0.015
+Verified robust radius: 0.028 ++
+Verified robust radius: 0.016 +
+Verified robust radius: 0.016 ++
+Verified robust radius: 0.028
+Verified robust radius: 0.018 +
+Verified robust radius: 0.023
+Verified robust radius: 0.02 +
+Verified robust radius: 0.009
+Verified robust radius: 0.022 +
+Verified robust radius: 0.02
+Verified robust radius: 0.004 +
+Verified robust radius: 0.02 +
+Verified robust radius: 0.014
+Verified robust radius: 0.019
+Verified robust radius: 0.002
+Verified robust radius: 0.022 ++
+Verified robust radius: 0.014
+Verified robust radius: 0.02
+
+MNIST_FFNN_10X80 Backward LiRPA results:
+Verified robust radius: 0.009
+Verified robust radius: 0.025
+Verified robust radius: 0.008
+Verified robust radius: 0.015
+Verified robust radius: 0.011
+Verified robust radius: 0.011
+Verified robust radius: 0.006
+Verified robust radius: 0.0
+Verified robust radius: 0.006
+Verified robust radius: 0.014
+Verified robust radius: 0.021
+Verified robust radius: 0.02
+Verified robust radius: 0.015
+Verified robust radius: 0.023
+Verified robust radius: 0.01
+Verified robust radius: 0.013
+Verified robust radius: 0.011
+Verified robust radius: 0.014
+Verified robust radius: 0.002
+Verified robust radius: 0.015
+Verified robust radius: 0.003
+Verified robust radius: 0.016
+Verified robust radius: 0.021
+Verified robust radius: 0.02
+Verified robust radius: 0.012
+Verified robust radius: 0.019
+Verified robust radius: 0.011
+Verified robust radius: 0.02
+Verified robust radius: 0.017
+Verified robust radius: 0.01
+Verified robust radius: 0.025
+Verified robust radius: 0.007
+Verified robust radius: 0.028
+Verified robust radius: 0.007
+Verified robust radius: 0.017
+Verified robust radius: 0.026
+Verified robust radius: 0.01
+Verified robust radius: 0.01
+Verified robust radius: 0.009
+Verified robust radius: 0.011
+Verified robust radius: 0.007
+Verified robust radius: 0.012
+Verified robust radius: 0.011
+Verified robust radius: 0.011
+Verified robust radius: 0.014
+Verified robust radius: 0.011
+Verified robust radius: 0.01
+Verified robust radius: 0.017
+Verified robust radius: 0.02
+Verified robust radius: 0.018
+Verified robust radius: 0.018
+Verified robust radius: 0.022
+Verified robust radius: 0.016
+Verified robust radius: 0.013
+Verified robust radius: 0.026
+Verified robust radius: 0.013
+Verified robust radius: 0.02
+Verified robust radius: 0.01
+Verified robust radius: 0.017
+Verified robust radius: 0.01
+Verified robust radius: 0.026
+Verified robust radius: 0.001
+Verified robust radius: 0.004
+Verified robust radius: 0.012
+Verified robust radius: 0.019
+Verified robust radius: 0.006
+Verified robust radius: 0.017
+Verified robust radius: 0.015
+Verified robust radius: 0.025
+Verified robust radius: 0.021
+Verified robust radius: 0.019
+Verified robust radius: 0.03
+Verified robust radius: 0.019
+Verified robust radius: 0.015
+Verified robust radius: 0.009
+Verified robust radius: 0.02
+Verified robust radius: 0.018
+Verified robust radius: 0.023
+Verified robust radius: 0.009
+Verified robust radius: 0.012
+Verified robust radius: 0.013
+Verified robust radius: 0.015
+Verified robust radius: 0.026
+Verified robust radius: 0.015
+Verified robust radius: 0.014
+Verified robust radius: 0.028
+Verified robust radius: 0.017
+Verified robust radius: 0.023
+Verified robust radius: 0.019
+Verified robust radius: 0.009
+Verified robust radius: 0.021
+Verified robust radius: 0.02
+Verified robust radius: 0.003
+Verified robust radius: 0.019
+Verified robust radius: 0.014
+Verified robust radius: 0.019
+Verified robust radius: 0.002
+Verified robust radius: 0.02
+Verified robust radius: 0.014
+Verified robust radius: 0.02
+
+
+================================================
+Appendix:
+
+Property_id		Alpha-CROWN		MultipathBP	    ERAN-DeepPoly
+-----------------------------------------------------------
+0				0.012           0.011           0.010
+8               0.009           0.008           0.006
+15              0.017           0.016           0.014
+36		        0.013		    0.012		    0.011
+38              0.012           0.011           0.009
+60              0.029           0.028           0.026
+67		        0.018		    0.017		    0.015
+71              0.033           0.033           0.030
+82              0.030           0.028           0.026
+84              0.016           0.016           0.014
+
+Alpha-CROWN times:
+172.7463572025299, 174.49528336524963, 174.59500527381897, 174.3144793510437, 173.8804771900177
+167.86801290512085, 174.05084371566772, 173.69630646705627, 146.03160619735718, 158.19256281852722
+Avg time: 169s
+
+MultipathBP times:
+2.295461416244507, 2.138359785079956, 2.1381170749664307, 2.251882791519165, 2.166175603866577
+2.325848340988159, 2.138472080230713, 2.1293840408325195, 2.1270251274108887, 2.130262613296509
+Avg time: 2.17s
+
+
+========
+0.009
+0.0257
+0.0085
+0.0154
+0.0117
+0.0112
+0.0067
+0.0008
+0.006
+0.0148
+0.0215
+0.020
+0.0153
+0.023
+0.0106
+0.013
+0.0116
+0.0142
+0.0021
+0.015
+0.009
+0.026
+0.015
+0.030
+0.026
+0.014
+0.020
+0.0241
+0.0125
+0.006
+0.019
+0.004
+0.011
+0.0136
+0.018
+0.0114
+0.017
+0.0128
+0.0092
+0.012
+========
+0.011
+0.0269
+0.0086
+0.0156
+0.0125
+0.0113
+0.0068
+0.0013
+0.008
+0.0153
+0.0218
+0.0212
+0.0158
+0.0236
+0.0113
+0.0162
+0.012
+0.0145
+0.0023
+0.0152
+0.0117
+0.0282
+0.017
+0.0333
+0.0283
+0.016
+0.022
+0.0268
+0.0139
+0.008
+0.0226
+0.0071
+0.015
+0.0155
+0.0202
+0.0135
+0.0191
+0.0148
+0.0112
+0.0144
+========
+alpha-crown
+0.012
+0.0282
+0.009
+0.0168
+0.014
+0.0125
+0.0075
+0.0015
+0.009
+0.0166
+0.0226
+0.0225
+0.0167
+0.025
+0.0124
+0.017
+0.013
+0.016
+0.0029
+0.0167
+0.0126
+0.0298
+0.0184
+0.0339
+0.030
+0.0168
+0.0229
+0.028
+0.015
+0.009
+0.0238
+0.0079
+0.018
+0.016
+0.022
+0.015
+0.02
+0.016
+0.012
+0.016
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

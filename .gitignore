@@ -1,8 +1,7 @@
-tmp
-build
 __pycache__
 *.egg-info
-dist
-*.swp
 *.log
 .trace_graph
+.idea
+/experiments/experiment_2/tiny-imagenet-200/
+/examples/vision/data/

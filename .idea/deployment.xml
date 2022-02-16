@@ -9,6 +9,27 @@
           </mappings>
         </serverdata>
       </paths>
+      <paths name="zhengye@172.31.233.88:22 password (1)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/data/zhengye/LiRPA_new" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="zhengye@172.31.233.88:22 password (2)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/data/zhengye/LiRPA_new" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="zhengye@172.31.233.88:22 password (3)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/data/zhengye/LiRPA_new" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
     </serverData>
     <option name="myAutoUpload" value="ALWAYS" />
   </component>
