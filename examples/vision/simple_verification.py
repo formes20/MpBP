@@ -31,7 +31,7 @@ def mnist_model():
 
 model = mnist_model()
 # Optionally, load the pretrained weights.
-checkpoint = torch.load(os.path.join(os.path.dirname(__file__),"pretrain/mnist_a_adv.pth"), map_location=torch.device('cpu'))
+checkpoint = torch.load(os.path.join(os.path.dirname(__file__), "pretrain/mnist_a_adv.pth"), map_location=torch.device('cpu'))
 model.load_state_dict(checkpoint)
 
 ## Step 2: Prepare dataset as usual

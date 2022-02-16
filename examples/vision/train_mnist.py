@@ -21,44 +21,38 @@ _, test_loader = mnist_loaders(test_batch_size)
 
 def mnist_ffnn():
     model = nn.Sequential(
-        nn.Linear(784, 100),
+        nn.Linear(784, 80),
         nn.ReLU(),
-        nn.Linear(100, 100),
+        nn.Linear(80, 80),
         nn.ReLU(),
-        nn.Linear(100, 100),
+        nn.Linear(80, 80),
         nn.ReLU(),
-        nn.Linear(100, 10)
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 10)
     )
     return model
-
-
-class Flatten(nn.Module):
-    def forward(self, x):
-        return x.view(x.size(0), -1)
-
-def mnist_conv():
-    model = nn.Sequential(
-        nn.Conv2d(1, 16, 4, stride=2, padding=1),
-        nn.ReLU(),
-        nn.Conv2d(16, 32, 4, stride=2, padding=1),
-        nn.ReLU(),
-        Flatten(),
-        nn.Linear(32*7*7, 100),
-        nn.ReLU(),
-        nn.Linear(100, 10)
-    )
-    return model
-
 
 model = mnist_ffnn()
 # print(model)
-num_epochs = 50
+num_epochs = 70
 
 
 def train(model, train_loader):
     criterion = torch.nn.CrossEntropyLoss()
-    # optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=3e-4)
 
     for epoch in range(num_epochs):
         batch_loss = 0
@@ -81,8 +75,7 @@ def train(model, train_loader):
         avg_loss_epoch = batch_loss / total_batches
         print('Epoch [{}/{}], Averge Loss:for epoch[{}, {:.4f}]'.format(epoch + 1, num_epochs, epoch + 1, avg_loss_epoch))
 
-    torch.save(model.state_dict(), './pretrain/mnist_ffnn_3x100.pth')
-
+    torch.save(model.state_dict(), './pretrain/mnist_ffnn_10x80_v2.pth')
 
 def accuracy_test(model_path, test_loader):
     correct = 0
@@ -105,4 +98,4 @@ def accuracy_test(model_path, test_loader):
 
 if __name__ == '__main__':
     train(model, train_loader)
-    accuracy_test('./pretrain/mnist_ffnn_3x100.pth', test_loader)
+    accuracy_test('./pretrain/mnist_ffnn_10x80_v2.pth', test_loader)

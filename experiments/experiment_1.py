@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision
+import time
 
 from auto_LiRPA import BoundedModule, BoundedTensor
 from auto_LiRPA.perturbations import PerturbationLpNorm
@@ -51,6 +52,7 @@ image = test_data.data[:N].reshape(N, 784)
 image = image.to(torch.float32) / 255.0
 true_label = test_data.targets[:N]
 
+time_begin = time.time()
 if torch.cuda.is_available():
     image = image.cuda()
     model = model.cuda()
@@ -61,7 +63,7 @@ lirpa_model = BoundedModule(model, torch.empty_like(image), device=image.device)
 print('Running on', image.device)
 
 ### Step 4: Compute bounds using LiRPA given a perturbation
-eps = 0.030
+eps = 0.0010
 norm = float("inf")
 ptb = PerturbationLpNorm(norm=norm, eps=eps)
 image = BoundedTensor(image, ptb)
@@ -80,12 +82,9 @@ C.scatter_(dim=2, index=target_labels, value=-1.0)
 # print('Computing bounds with a specification matrix:\n', C)
 
 # for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)']:
-# for method in ['forward']:
-for method in ['backward (CROWN)']:
+for method in ['forward']:
+# for method in ['backward (CROWN)']:
     print("Bounding method:", method)
-    if 'Optimized' in method:
-        # For optimized bound, you can change the number of iterations, learning rate, etc here. Also you can increase verbosity to see per-iteration loss values.
-        lirpa_model.set_bound_opts({'optimize_bound_args': {'ob_iteration': 20, 'ob_lr': 0.1, 'ob_verbose': 0}})
     lb, ub = lirpa_model.compute_bounds(x=(image,), method=method.split()[0], C=C)
     verified_robust = 0
     for i in range(N):
@@ -94,3 +93,6 @@ for method in ['backward (CROWN)']:
         if torch.min(lb, dim=1)[0][i] >= 0:
             verified_robust += 1
     print('Verified robust number:', verified_robust)
+    time_elapse = time.time() - time_begin
+    print('Time elapse:', time_elapse)
+    # print(torch.cuda.memory_summary())

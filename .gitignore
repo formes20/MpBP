@@ -6,3 +6,5 @@ dist
 *.swp
 *.log
 .trace_graph
+/experiments/experiment_2/tiny-imagenet-200/
+/examples/vision/data/
