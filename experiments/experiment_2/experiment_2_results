@@ -1,7 +1,0 @@
-CIFAR-10 (0.001)
-61    56
-Tiny ImageNet (0.001)
-27    25
-================
-ERAN results:
-progress: 131/None, correct:  100/131, verified: 56/100, unsafe: 0/100,  time: 355.015; 496.717; 49671.687

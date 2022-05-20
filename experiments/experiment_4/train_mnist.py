@@ -3,8 +3,6 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 
-import os
-
 
 def mnist_loaders(batch_size): 
     train_set = datasets.MNIST('../../examples/vision/data', train=True, download=False, transform=transforms.ToTensor())
@@ -60,15 +58,43 @@ def mnist_ffnn():
     )
     return model
 
+class Flatten(nn.Module):
+    def forward(self, x):
+        return x.view(x.size(0), -1)
 
-model = mnist_ffnn()
+def mnist_cnn():
+    model = nn.Sequential(
+        nn.Conv2d(1, 8, 5, stride=1, padding=1),
+        nn.ReLU(),
+        nn.Conv2d(8, 8, 5, stride=1, padding=1),
+        nn.ReLU(),
+        Flatten(),
+        nn.Linear(24 * 24 * 8, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 80),
+        nn.ReLU(),
+        nn.Linear(80, 10)
+    )
+    return model
+
+model = mnist_cnn()
 # print(model)
 num_epochs = 50
 
 
 def train(model, train_loader):
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=3e-4)
 
     for epoch in range(num_epochs):
         batch_loss = 0
@@ -76,7 +102,7 @@ def train(model, train_loader):
 
         for i, (images, labels) in enumerate(train_loader):
             # Reshape images to (batch_size, input_size)
-            images = images.reshape(-1, 784)
+            images = images.reshape(-1, 1, 28, 28)
             # print(images.shape)
             outputs = model(images)
             loss = criterion(outputs, labels)
@@ -91,18 +117,18 @@ def train(model, train_loader):
         avg_loss_epoch = batch_loss / total_batches
         print('Epoch [{}/{}], Averge Loss:for epoch[{}, {:.4f}]'.format(epoch + 1, num_epochs, epoch + 1, avg_loss_epoch))
 
-    torch.save(model.state_dict(), './mnist_ffnn_16x50.pth')
+    torch.save(model.state_dict(), './mnist_cnn.pth')
 
 def accuracy_test(model_path, test_loader):
     correct = 0
     total = 0
 
-    model = mnist_ffnn()
+    model = mnist_cnn()
     model.load_state_dict(torch.load(model_path))
 
     with torch.no_grad():
         for images, labels in test_loader:
-            images = images.reshape(-1, 784)
+            images = images.reshape(-1, 1, 28, 28)
             # print(labels)
             outputs_test = model(images)
             _, predicted = torch.max(outputs_test.data, 1)
@@ -114,4 +140,4 @@ def accuracy_test(model_path, test_loader):
 
 if __name__ == '__main__':
     train(model, train_loader)
-    accuracy_test('./mnist_ffnn_16x50.pth', test_loader)
+    accuracy_test('./mnist_cnn.pth', test_loader)

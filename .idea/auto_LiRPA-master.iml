@@ -3,7 +3,7 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/examples/vision/data/cifar-10-batches-py" />
-      <excludeFolder url="file://$MODULE_DIR$/experiments/experiment_2/tiny-imagenet-200" />
+      <excludeFolder url="file://$MODULE_DIR$/experiments/experiment_1/tiny-imagenet-200" />
     </content>
     <orderEntry type="jdk" jdkName="Remote Python 3.6.8 (sftp://zhengye@172.31.233.88:22/data/zhengye/LiRPA_Verify-main/venv/bin/python3.6)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

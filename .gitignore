@@ -3,5 +3,5 @@ __pycache__
 *.log
 .trace_graph
 .idea
-/experiments/experiment_2/tiny-imagenet-200/
+/experiments/experiment_1/tiny-imagenet-200/
 /examples/vision/data/
