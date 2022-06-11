@@ -4,7 +4,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 
 
-def mnist_loaders(batch_size): 
+def cifar_loaders(batch_size):
     train_set = datasets.CIFAR10('/data/zhengye/LiRPA_new/examples/vision/data', train=True, download=False, transform=transforms.ToTensor())
     test_set = datasets.CIFAR10('/data/zhengye/LiRPA_new/examples/vision/data', train=False, download=False, transform=transforms.ToTensor())
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, pin_memory=True)
@@ -15,8 +15,8 @@ def mnist_loaders(batch_size):
 batch_size = 64
 test_batch_size = 1000
 
-train_loader, _ = mnist_loaders(batch_size)
-_, test_loader = mnist_loaders(test_batch_size)
+train_loader, _ = cifar_loaders(batch_size)
+_, test_loader = cifar_loaders(test_batch_size)
 
 
 class Flatten(nn.Module):
@@ -58,10 +58,50 @@ def cifar10_conv():
     )
     return model
 
+def cifar10_cnn_gpu_time():
+    model = nn.Sequential(
+        nn.Conv2d(3, 6, 5, stride=1, padding=1),
+        nn.ReLU(),
+        nn.Conv2d(6, 6, 5, stride=1, padding=1),
+        nn.ReLU(),
+        Flatten(),
+        nn.Linear(28 * 28 * 6, 100),
+        nn.ReLU(),
+        nn.Linear(100, 100),
+        nn.ReLU(),
+        nn.Linear(100, 100),
+        nn.ReLU(),
+        nn.Linear(100, 100),
+        nn.ReLU(),
+        nn.Linear(100, 100),
+        nn.ReLU(),
+        nn.Linear(100, 100),
+        nn.ReLU(),
+        nn.Linear(100, 100),
+        nn.ReLU(),
+        nn.Linear(100, 100),
+        nn.ReLU(),
+        nn.Linear(100, 100),
+        nn.ReLU(),
+        nn.Linear(100, 100),
+        nn.ReLU(),
+        nn.Linear(100, 100),
+        nn.ReLU(),
+        nn.Linear(100, 100),
+        nn.ReLU(),
+        nn.Linear(100, 100),
+        nn.ReLU(),
+        nn.Linear(100, 100),
+        nn.ReLU(),
+        nn.Linear(100, 10)
+    )
+    return model
 
-model = cifar10_conv()
+
+
+model = cifar10_cnn_gpu_time()
 # print(model)
-num_epochs = 70
+num_epochs = 40
 
 
 def train(model, train_loader):
@@ -90,14 +130,14 @@ def train(model, train_loader):
         avg_loss_epoch = batch_loss / total_batches
         print('Epoch [{}/{}], Averge Loss:for epoch[{}, {:.4f}]'.format(epoch + 1, num_epochs, epoch + 1, avg_loss_epoch))
 
-    torch.save(model.state_dict(), './cifar10_conv.pth')
+    torch.save(model.state_dict(), './cifar10_cnn_gpu_time.pth')
 
 
 def accuracy_test(model_path, test_loader):
     correct = 0
     total = 0
 
-    model = cifar10_conv()
+    model = cifar10_cnn_gpu_time()
     model.load_state_dict(torch.load(model_path))
 
     with torch.no_grad():
@@ -113,5 +153,5 @@ def accuracy_test(model_path, test_loader):
 
 
 if __name__ == '__main__':
-    # train(model, train_loader)
-    accuracy_test('./cifar10_conv.pth', test_loader)
+    train(model, train_loader)
+    accuracy_test('./cifar10_cnn_gpu_time.pth', test_loader)

@@ -52,7 +52,6 @@ image = test_data.data[:N].reshape(N, 784)
 image = image.to(torch.float32) / 255.0
 true_label = test_data.targets[:N]
 
-time_begin = time.time()
 if torch.cuda.is_available():
     image = image.cuda()
     model = model.cuda()
@@ -82,17 +81,18 @@ C.scatter_(dim=2, index=target_labels, value=-1.0)
 # print('Computing bounds with a specification matrix:\n', C)
 
 # for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)']:
-for method in ['forward+backward']:
-# for method in ['backward (CROWN)']:
-    print("Bounding method:", method)
-    lb, ub = lirpa_model.compute_bounds(x=(image,), method=method.split()[0], C=C)
-    verified_robust = 0
-    for i in range(N):
-        # print("Image {} top-1 prediction {} ground-truth {}".format(i, label[i], true_label[i]))
-        # print("lowest margin >= {l:10.5f}".format(l=torch.min(lb, dim=1)[0][i]))
-        if torch.min(lb, dim=1)[0][i] >= 0:
-            verified_robust += 1
-    print('Verified robust number:', verified_robust)
-    time_elapse = time.time() - time_begin
-    print('Time elapse:', time_elapse)
-    # print(torch.cuda.memory_summary())
+method ='backward'
+print("Bounding method:", method)
+time_begin = time.time()
+
+lb, ub = lirpa_model.compute_bounds(x=(image,), method=method.split()[0], C=C)
+verified_robust = 0
+for i in range(N):
+    # print("Image {} top-1 prediction {} ground-truth {}".format(i, label[i], true_label[i]))
+    # print("lowest margin >= {l:10.5f}".format(l=torch.min(lb, dim=1)[0][i]))
+    if torch.min(lb, dim=1)[0][i] >= 0:
+        verified_robust += 1
+print('Verified robust number:', verified_robust)
+time_elapse = time.time() - time_begin
+print('Time elapse:', time_elapse)
+# print(torch.cuda.memory_summary())
