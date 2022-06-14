@@ -4,12 +4,12 @@ import torchvision
 import torchvision.transforms as transforms
 import time
 
-# from auto_LiRPA import BoundedModule, BoundedTensor
-# from auto_LiRPA.perturbations import PerturbationLpNorm
+# from multipath_bp import BoundedModule, BoundedTensor
+# from multipath_bp.perturbations import PerturbationLpNorm
 
-from auto_LiRPA.bound_general_multipath import BoundedModule
-from auto_LiRPA import BoundedTensor
-from auto_LiRPA.perturbations_multipath import PerturbationLpNorm
+from multipath_bp.bound_general_multipath import BoundedModule
+from multipath_bp import BoundedTensor
+from multipath_bp.perturbations_multipath import PerturbationLpNorm
 
 ### Step 1: Define computational graph
 class Flatten(nn.Module):
@@ -51,47 +51,8 @@ def cifar10_conv():
     )
     return model
 
-def cifar10_cnn_gpu_time():
-    model = nn.Sequential(
-        nn.Conv2d(3, 6, 5, stride=1, padding=1),
-        nn.ReLU(),
-        nn.Conv2d(6, 6, 5, stride=1, padding=1),
-        nn.ReLU(),
-        Flatten(),
-        nn.Linear(28 * 28 * 6, 100),
-        nn.ReLU(),
-        nn.Linear(100, 100),
-        nn.ReLU(),
-        nn.Linear(100, 100),
-        nn.ReLU(),
-        nn.Linear(100, 100),
-        nn.ReLU(),
-        nn.Linear(100, 100),
-        nn.ReLU(),
-        nn.Linear(100, 100),
-        nn.ReLU(),
-        nn.Linear(100, 100),
-        nn.ReLU(),
-        nn.Linear(100, 100),
-        nn.ReLU(),
-        nn.Linear(100, 100),
-        nn.ReLU(),
-        nn.Linear(100, 100),
-        nn.ReLU(),
-        nn.Linear(100, 100),
-        nn.ReLU(),
-        nn.Linear(100, 100),
-        nn.ReLU(),
-        nn.Linear(100, 100),
-        nn.ReLU(),
-        nn.Linear(100, 100),
-        nn.ReLU(),
-        nn.Linear(100, 10)
-    )
-    return model
-
-model = cifar10_cnn_gpu_time()
-checkpoint = torch.load('./cifar10_cnn_gpu_time.pth', map_location=torch.device('cpu'))
+model = cifar10_conv()
+checkpoint = torch.load('./cifar10_conv.pth', map_location=torch.device('cpu'))
 model.load_state_dict(checkpoint)
 
 ### Step 2: Prepare dataset as usual
@@ -100,17 +61,17 @@ test_data = torchvision.datasets.CIFAR10("../../examples/vision/data", train=Fal
                                          transform=transforms.Compose([transforms.ToTensor()]))
 n_classes = 10
 
-for i in range(1, 2):
+for i in range(131):
     # Adjust to model input shape!!!
     image = test_data[i][0].reshape(-1, 3, 32, 32)
     # Convert to float between 0. and 1.
     true_label = torch.tensor(test_data.targets[i])
 
-    if torch.cuda.is_available():
-        image = image.cuda()
-        model = model.cuda()
+    # if torch.cuda.is_available():
+    #     image = image.cuda()
+    #     model = model.cuda()
 
-    ### Step 3: wrap model with auto_LiRPA.
+    ### Step 3: wrap model with MultipathBP.
     # The second parameter is for constructing the trace of the computational graph, and its content is not important.
     lirpa_model = BoundedModule(model, torch.empty_like(image), device=image.device)
     # print('Running on', image.device)

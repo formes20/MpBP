@@ -3,12 +3,12 @@ import torch.nn as nn
 import torchvision
 import time
 
-# from auto_LiRPA import BoundedModule, BoundedTensor
-# from auto_LiRPA.perturbations import PerturbationLpNorm
+# from multipath_bp import BoundedModule, BoundedTensor
+# from multipath_bp.perturbations import PerturbationLpNorm
 
-from auto_LiRPA.bound_general_zhengye import BoundedModule
-from auto_LiRPA import BoundedTensor
-from auto_LiRPA.perturbations_zhengye import PerturbationLpNorm
+from multipath_bp.bound_general_multipath import BoundedModule
+from multipath_bp import BoundedTensor
+from multipath_bp.perturbations_multipath import PerturbationLpNorm
 
 ### Step 1: Define computational graph
 # Models defined by nn.Sequential
@@ -56,7 +56,7 @@ if torch.cuda.is_available():
     image = image.cuda()
     model = model.cuda()
 
-### Step 3: wrap model with auto_LiRPA.
+### Step 3: wrap model with MultipathBP.
 # The second parameter is for constructing the trace of the computational graph, and its content is not important.
 lirpa_model = BoundedModule(model, torch.empty_like(image), device=image.device)
 print('Running on', image.device)

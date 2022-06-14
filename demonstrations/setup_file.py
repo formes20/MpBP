@@ -5,9 +5,9 @@ import torch.nn as nn
 import torchvision
 import time
 
-from auto_LiRPA.bound_general_multipath import BoundedModule
-from auto_LiRPA import BoundedTensor
-from auto_LiRPA.perturbations_multipath import PerturbationLpNorm
+from multipath_bp.bound_general_multipath import BoundedModule
+from multipath_bp import BoundedTensor
+from multipath_bp.perturbations_multipath import PerturbationLpNorm
 
 ### Step 1: load model and dataset
 def mnist_ffnn():
@@ -35,7 +35,6 @@ def mnist_ffnn():
         nn.Linear(80, 10)
     )
     return model
-
 checkpoint = torch.load("./mnist_ffnn_10x80.pth", map_location=torch.device('cpu'))
 test_data = torchvision.datasets.MNIST("../examples/vision/data", train=False, download=False, transform=torchvision.transforms.ToTensor())
 #########
@@ -61,12 +60,12 @@ lirpa_model = BoundedModule(model, torch.empty_like(image), device=image.device)
 
 
 ### Step 3: set specification
-eps = 0.010
+delta = 0.010
 norm = float("inf")
 #########
 
 
-ptb = PerturbationLpNorm(norm=norm, eps=eps)
+ptb = PerturbationLpNorm(norm=norm, eps=delta)
 image = BoundedTensor(image, ptb)
 pred = lirpa_model(image)
 label = torch.argmax(pred, dim=1).cpu().detach().numpy()
@@ -79,7 +78,8 @@ method = 'backward'
 
 
 print("Bounding method:", method)
-print('========= Reachable region =========')
+print('')
+print('=============== Reachable region ===============')
 lb, ub = lirpa_model.compute_bounds(x=(image,), method=method.split()[0])
 for i in range(N):
     print("Image {} top-1 prediction {} ground-truth {}".format(i, label[i], true_label[i]))
@@ -89,6 +89,16 @@ for i in range(N):
             j=j, l=lb[i][j].item(), u=ub[i][j].item(), ind=indicator))
 
 
+
+
+
+
+
+
+
+
+
+### specification matrix
 C = torch.zeros(size=(N, n_classes - 1, n_classes), device=image.device)
 groundtruth = true_label.to(device=image.device).unsqueeze(1).unsqueeze(1)
 C.scatter_(dim=2, index=groundtruth.repeat(1, n_classes - 1, 1), value=1.0)
@@ -103,6 +113,7 @@ for i in range(N):
     if torch.min(lb, dim=1)[0][i] >= 0:
         verified_robust += 1
 time_elapse = time.time() - time_begin
-print('========= Robustness =========')
+print('')
+print('================== Robustness ==================')
 print('verified') if verified_robust == 1 else print('unknown')
-print('Time elapse:', time_elapse)
+print('Time elapsed:', time_elapse)

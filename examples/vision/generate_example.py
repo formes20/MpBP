@@ -67,7 +67,7 @@ def generate_example(model):
         sd['linear3.weight'][1][1] = 1.0
         sd['linear3.bias'][0] = 0
         sd['linear3.bias'][1] = 0
-    torch.save(model.state_dict(), './pretrain/abstracmp_net.pth')
+    torch.save(model.state_dict(), './pretrain/example_net.pth')
 
 
 if __name__ == '__main__':

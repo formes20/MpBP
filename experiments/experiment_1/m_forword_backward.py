@@ -3,12 +3,12 @@ import torch.nn as nn
 import torchvision
 import time
 
-from auto_LiRPA import BoundedModule, BoundedTensor
-from auto_LiRPA.perturbations import PerturbationLpNorm
+from multipath_bp import BoundedModule, BoundedTensor
+from multipath_bp.perturbations import PerturbationLpNorm
 
-# from auto_LiRPA.bound_general_zhengye import BoundedModule
-# from auto_LiRPA import BoundedTensor
-# from auto_LiRPA.perturbations_zhengye import PerturbationLpNorm
+# from multipath_bp.bound_general_multipath import BoundedModule
+# from multipath_bp import BoundedTensor
+# from multipath_bp.perturbations_multipath import PerturbationLpNorm
 
 ### Step 1: Define computational graph
 # Models defined by nn.Sequential
