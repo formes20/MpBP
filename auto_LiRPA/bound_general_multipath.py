@@ -7,11 +7,11 @@ import torch
 import torch.optim as optim
 from torch.nn import DataParallel, Parameter, parameter
 
-from auto_LiRPA.bound_op_map_zhengye import bound_op_map
-from auto_LiRPA.bound_ops_zhengye import *
+from auto_LiRPA.bound_op_map_multipath import bound_op_map
+from auto_LiRPA.bound_ops_multipath import *
 from auto_LiRPA.bounded_tensor import BoundedTensor, BoundedParameter
 from auto_LiRPA.parse_graph import parse_module
-from auto_LiRPA.perturbations_zhengye import *
+from auto_LiRPA.perturbations_multipath import *
 from auto_LiRPA.utils import *
 from auto_LiRPA.adam_element_lr import AdamElementLR
 

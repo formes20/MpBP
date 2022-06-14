@@ -1,4 +1,4 @@
-from auto_LiRPA.bound_ops_zhengye import *
+from auto_LiRPA.bound_ops_multipath import *
 
 bound_op_map = {
     # 'onnx::MaxPool': BoundMaxPool2d,

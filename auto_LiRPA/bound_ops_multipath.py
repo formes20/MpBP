@@ -12,7 +12,7 @@ from torch.nn import MaxPool2d, \
 import math
 from collections import OrderedDict
 
-from auto_LiRPA.perturbations_zhengye import Perturbation, PerturbationLpNorm, PerturbationSynonym, PerturbationL0Norm
+from auto_LiRPA.perturbations_multipath import Perturbation, PerturbationLpNorm, PerturbationSynonym, PerturbationL0Norm
 from auto_LiRPA.utils import eyeC, OneHotC, LinearBound, user_data_dir, isnan, Patches, logger, Benchmarking, prod, batched_index_select, patchesToMatrix, check_padding
 
 torch._C._jit_set_profiling_executor(False)

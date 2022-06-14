@@ -5,7 +5,7 @@
       <excludeFolder url="file://$MODULE_DIR$/examples/vision/data/cifar-10-batches-py" />
       <excludeFolder url="file://$MODULE_DIR$/experiments/experiment_1/tiny-imagenet-200" />
     </content>
-    <orderEntry type="jdk" jdkName="Remote Python 3.6.8 (sftp://zhengye@172.31.233.88:22/data/zhengye/LiRPA_Verify-main/venv/bin/python3.6)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Remote Python 3.8.13 (sftp://zhengye@172.31.234.204:22/home/zhengye/.conda/envs/eran/bin/python3.8)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
