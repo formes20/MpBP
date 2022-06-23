@@ -81,7 +81,7 @@ class BoundedModule(nn.Module):
         self._mark_perturbed_nodes()
 
         # set the default values here
-        optimize_bound_args = {'ob_iteration': 20, 'ob_beta': False, 'ob_alpha': True, 'ob_alpha_share_slopes': False,
+        optimize_bound_args = {'ob_iteration': 10, 'ob_beta': False, 'ob_alpha': True, 'ob_alpha_share_slopes': False,
                                'ob_opt_coeffs': False, 'ob_opt_bias': False,
                                'ob_optimizer': "adam", 'ob_verbose': 0,
                                'ob_keep_best': True, 'ob_update_by_layer': True, 'ob_lr': 0.5,

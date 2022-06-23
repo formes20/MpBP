@@ -3,12 +3,12 @@ import torch.nn as nn
 import torchvision
 import time
 
-# from multipath_bp import BoundedModule, BoundedTensor
-# from multipath_bp.perturbations import PerturbationLpNorm
+from multipath_bp import BoundedModule, BoundedTensor
+from multipath_bp.perturbations import PerturbationLpNorm
 
-from multipath_bp.bound_general_multipath import BoundedModule
-from multipath_bp import BoundedTensor
-from multipath_bp.perturbations_multipath import PerturbationLpNorm
+# from multipath_bp.bound_general_multipath import BoundedModule
+# from multipath_bp import BoundedTensor
+# from multipath_bp.perturbations_multipath import PerturbationLpNorm
 
 ### Step 1: Define computational graph
 # Models defined by nn.Sequential
@@ -62,7 +62,7 @@ multipath_model = BoundedModule(model, torch.empty_like(image), device=image.dev
 print('Running on', image.device)
 
 ### Step 4: Compute bounds using LiRPA given a perturbation
-eps = 0.010
+eps = 0.0026
 norm = float("inf")
 ptb = PerturbationLpNorm(norm=norm, eps=eps)
 image = BoundedTensor(image, ptb)
@@ -80,19 +80,22 @@ target_labels = (target_labels + groundtruth) % n_classes
 C.scatter_(dim=2, index=target_labels, value=-1.0)
 # print('Computing bounds with a specification matrix:\n', C)
 
-# for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)']:
-method ='backward'
+# method = 'forward'
+# method = 'forward+backward'
+method = 'backward'
 print("Bounding method:", method)
-time_begin = time.time()
 
+time_begin = time.time()
 lb, ub = multipath_model.compute_bounds(x=(image,), method=method.split()[0], C=C)
+time_elapse = time.time() - time_begin
+
 verified_robust = 0
 for i in range(N):
     # print("Image {} top-1 prediction {} ground-truth {}".format(i, label[i], true_label[i]))
     # print("lowest margin >= {l:10.5f}".format(l=torch.min(lb, dim=1)[0][i]))
     if torch.min(lb, dim=1)[0][i] >= 0:
         verified_robust += 1
+
 print('Verified robust number:', verified_robust)
-time_elapse = time.time() - time_begin
 print('Time elapse:', time_elapse)
 # print(torch.cuda.memory_summary())

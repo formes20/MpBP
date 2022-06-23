@@ -1,0 +1,22 @@
+Verified robust number: 33
+Time elapse: 0.03187417984008789
+Verified robust number: 40
+Time elapse: 0.052314613342285156
+
+
+
+Verified robust number: 56
+Time elapse: 0.2201249599456787
+Verified robust number: 58
+Time elapse: 0.2616281509399414
+
+
+
+Verified robust number: 96
+Time elapse: 0.25254106521606445
+Verified robust number: 96
+Time elapse: 0.28897595405578613
+
+# GPUPoly
+progress: 100/None, correct:  100/100, verified: 96/100, unsafe: 0/100,  time: 0.482; 0.596; 59.593
+analysis precision  96 /  100

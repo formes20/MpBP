@@ -3,24 +3,28 @@ import torch.nn as nn
 import torchvision
 import time
 
-# from multipath_bp import BoundedModule, BoundedTensor
-# from multipath_bp.perturbations import PerturbationLpNorm
+from multipath_bp import BoundedModule, BoundedTensor
+from multipath_bp.perturbations import PerturbationLpNorm
 
-from multipath_bp.bound_general_multipath import BoundedModule
-from multipath_bp import BoundedTensor
-from multipath_bp.perturbations_multipath import PerturbationLpNorm
+# from multipath_bp.bound_general_multipath import BoundedModule
+# from multipath_bp import BoundedTensor
+# from multipath_bp.perturbations_multipath import PerturbationLpNorm
 
 ### Step 1: Define computational graph
 # Models defined by nn.Sequential
-def mnist_ffnn():
+
+class Flatten(nn.Module):
+    def forward(self, x):
+        return x.view(x.size(0), -1)
+
+def mnist_cnn():
     model = nn.Sequential(
-        nn.Linear(784, 80),
+        nn.Conv2d(1, 16, 5, stride=1, padding=1),
         nn.ReLU(),
-        nn.Linear(80, 80),
+        nn.Conv2d(16, 16, 5, stride=1, padding=1),
         nn.ReLU(),
-        nn.Linear(80, 80),
-        nn.ReLU(),
-        nn.Linear(80, 80),
+        Flatten(),
+        nn.Linear(24 * 24 * 16, 80),
         nn.ReLU(),
         nn.Linear(80, 80),
         nn.ReLU(),
@@ -38,16 +42,16 @@ def mnist_ffnn():
     )
     return model
 
-model = mnist_ffnn()
-checkpoint = torch.load("./mnist_ffnn_10x80.pth", map_location=torch.device('cpu'))
+model = mnist_cnn()
+checkpoint = torch.load("./mnist_cnn.pth", map_location=torch.device('cpu'))
 model.load_state_dict(checkpoint)
 
 ### Step 2: Prepare dataset as usual
 test_data = torchvision.datasets.MNIST("../../examples/vision/data", train=False, download=False, transform=torchvision.transforms.ToTensor())
-N = 100
+N = 1
 n_classes = 10
 # Adjust to model input shape!!!
-image = test_data.data[:N].reshape(N, 784)
+image = test_data.data[:N].reshape(N, 1, 28, 28)
 # Convert to float between 0. and 1.
 image = image.to(torch.float32) / 255.0
 true_label = test_data.targets[:N]
@@ -55,6 +59,8 @@ true_label = test_data.targets[:N]
 if torch.cuda.is_available():
     image = image.cuda()
     model = model.cuda()
+
+
 
 ### Step 3: wrap model with MultipathBP.
 # The second parameter is for constructing the trace of the computational graph, and its content is not important.
@@ -80,8 +86,9 @@ target_labels = (target_labels + groundtruth) % n_classes
 C.scatter_(dim=2, index=target_labels, value=-1.0)
 # print('Computing bounds with a specification matrix:\n', C)
 
-# for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)']:
-method ='backward'
+# method = 'forward'
+# method = 'forward+backward'
+method = 'backward'
 print("Bounding method:", method)
 time_begin = time.time()
 
@@ -96,3 +103,4 @@ print('Verified robust number:', verified_robust)
 time_elapse = time.time() - time_begin
 print('Time elapse:', time_elapse)
 # print(torch.cuda.memory_summary())
+

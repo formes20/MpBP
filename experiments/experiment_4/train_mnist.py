@@ -64,12 +64,12 @@ class Flatten(nn.Module):
 
 def mnist_cnn():
     model = nn.Sequential(
-        nn.Conv2d(1, 8, 5, stride=1, padding=1),
+        nn.Conv2d(1, 16, 5, stride=1, padding=1),
         nn.ReLU(),
-        nn.Conv2d(8, 8, 5, stride=1, padding=1),
+        nn.Conv2d(16, 16, 5, stride=1, padding=1),
         nn.ReLU(),
         Flatten(),
-        nn.Linear(24 * 24 * 8, 80),
+        nn.Linear(24 * 24 * 16, 80),
         nn.ReLU(),
         nn.Linear(80, 80),
         nn.ReLU(),
@@ -89,7 +89,7 @@ def mnist_cnn():
 
 model = mnist_cnn()
 # print(model)
-num_epochs = 50
+num_epochs = 20
 
 
 def train(model, train_loader):
