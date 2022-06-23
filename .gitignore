@@ -2,6 +2,7 @@ __pycache__
 *.egg-info
 *.log
 .trace_graph
-.idea
-/experiments/experiment_1/tiny-imagenet-200/
-/examples/vision/data/
+
+.idea/
+./experiments/experiment_1/tiny-imagenet-200/
+./examples/vision/data/
