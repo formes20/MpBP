@@ -19,13 +19,20 @@ A video demonstration is available at https://youtu.be/3KyPMuPpfR8.
 
 ## Installation
 
+According to our experience, MpBP can work properly in Python 3.7+ and PyTorch 1.8+. 
+Note that the available PyTorch version may depend on you CUDA version, 
+which is often fixed in a GPU environment. 
+So we highly recommend users to see the [PyTorch Get Start](https://pytorch.org/get-started/locally/) 
+page to match their system environment. 
 
+[Miniconda](https://docs.conda.io/en/latest/miniconda.html) is also recommended for
+Python packages managing. Once the Python and PyTorch is deployed, 
+users can install other requirement packages of MpBP via:
 
-
-
-
-
-
+```bash
+cd ./mpbp
+pip install requirements.txt
+```
 ## Usage
 
 We provide a command line interface to MpBP, whose detailed usage is at Choice 1.
