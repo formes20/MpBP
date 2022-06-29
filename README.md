@@ -26,7 +26,7 @@ So we highly recommend users to see the [PyTorch Get Start](https://pytorch.org/
 page to match their system environment. 
 
 [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is also recommended for
-Python packages managing. Once the Python and PyTorch is deployed, 
+Python packages management. Once the Python and PyTorch is deployed, 
 users can install other requirement packages of MpBP via:
 
 ```bash

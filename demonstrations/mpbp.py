@@ -1,5 +1,8 @@
+import os
 import sys
-sys.path.extend(['/data1/zhengye/MultipathBP', '/data1/zhengye/MultipathBP'])
+pre_path = os.path.abspath('../')
+sys.path.append(pre_path)
+
 import torch
 import torch.nn as nn
 import torchvision
@@ -25,8 +28,10 @@ args = parser.parse_args()
 checkpoint = torch.load(args.net, map_location=torch.device('cpu'))
 if Specification.dataset == 'MNIST':
     test_data = torchvision.datasets.MNIST("../examples/vision/data", train=False, download=False, transform=torchvision.transforms.ToTensor())
+elif Specification.dataset == 'CIFAR-10':
+    test_data = torchvision.datasets.CIFAR10("../examples/vision/data", train=False, download=False, transform=torchvision.transforms.ToTensor())
 else:
-    test_data = torchvision.datasets.MNIST("../examples/vision/data", train=False, download=False, transform=torchvision.transforms.ToTensor())
+    test_data = torchvision.datasets.ImageFolder(Specification.dataset, transform=torchvision.transforms.ToTensor())
 
 def mnist_ffnn():
     model = nn.Sequential(
@@ -55,11 +60,21 @@ def mnist_ffnn():
     return model
 model = mnist_ffnn()
 model.load_state_dict(checkpoint)
-N = 100
-n_classes = 10
-image = test_data.data[:N].reshape(N, 784)
-image = image.to(torch.float32) / 255.0
-true_label = test_data.targets[:N]
+
+if Specification.batch > 0:
+    N = Specification.batch
+    n_classes = 10
+    image = test_data.data[:N].reshape(N, 784)
+    image = image.to(torch.float32) / 255.0
+    true_label = test_data.targets[:N]
+
+else:
+    N = 1
+    n_classes = 10
+    image = test_data.data[Specification.x_0:Specification.x_0 + 1].reshape(1, 784)
+    image = image.to(torch.float32) / 255.0
+    true_label = test_data.targets[Specification.x_0:Specification.x_0 + 1]
+
 if torch.cuda.is_available():
     image = image.cuda()
     model = model.cuda()
@@ -98,13 +113,23 @@ if bool(args.verbose) == True:
                 j=j, l=lb[i][j].item(), u=ub[i][j].item(), ind=indicator))
 
 ### specification matrix
-C = torch.zeros(size=(N, n_classes - 1, n_classes), device=image.device)
-groundtruth = true_label.to(device=image.device).unsqueeze(1).unsqueeze(1)
-C.scatter_(dim=2, index=groundtruth.repeat(1, n_classes - 1, 1), value=1.0)
-target_labels = torch.arange(1, 10, device=image.device).repeat(N, 1, 1).transpose(1, 2)
-target_labels = (target_labels + groundtruth) % n_classes
-C.scatter_(dim=2, index=target_labels, value=-1.0)
-# print('Computing bounds with a specification matrix:\n', C)
+if Specification.unsafe != 'untarget':
+    unsafe_list = Specification.unsafe
+    C = torch.zeros(size=(N, len(unsafe_list), n_classes), device=image.device)
+    groundtruth = true_label.to(device=image.device).unsqueeze(1).unsqueeze(1)
+    C.scatter_(dim=2, index=groundtruth.repeat(1, len(unsafe_list), 1), value=1.0)
+    target_labels = torch.tensor(unsafe_list, device=image.device).repeat(N, 1, 1).transpose(1, 2)
+    C.scatter_(dim=2, index=target_labels, value=-1.0)
+    # print('Computing bounds with a specification matrix:\n', C)
+
+else:
+    C = torch.zeros(size=(N, n_classes - 1, n_classes), device=image.device)
+    groundtruth = true_label.to(device=image.device).unsqueeze(1).unsqueeze(1)
+    C.scatter_(dim=2, index=groundtruth.repeat(1, n_classes - 1, 1), value=1.0)
+    target_labels = torch.arange(1, 10, device=image.device).repeat(N, 1, 1).transpose(1, 2)
+    target_labels = (target_labels + groundtruth) % n_classes
+    C.scatter_(dim=2, index=target_labels, value=-1.0)
+    # print('Computing bounds with a specification matrix:\n', C)
 
 time_begin = time.time()
 lb, ub = multipath_bp.compute_bounds(x=(image,), method=method.split()[0], C=C)

@@ -9,10 +9,11 @@ class Specification:
     x_0 = 0
 
     # `batch (> 0)` specifies the first batch inputs in the dataset for verification.
-    batch = 100
+    # batch = 100
+    batch = -1
 
     # `delta = (float)` specifies the perturbation size.
-    delta = 0.016
+    delta = 0.001
 
     # `norm = float('inf')` specifies the perturbation type is infinity norm distance.
     # Other optional types are `norm = 1`, `norm = 2`.
@@ -21,3 +22,5 @@ class Specification:
     # `unsafe = untarget` sets all other incorrect labels as the unsafe labels,
     # `unsafe = [idx]` sets label list [idx] as unsafe labels.
     unsafe = 'untarget'
+    # unsafe = [0, 1, 2]
+

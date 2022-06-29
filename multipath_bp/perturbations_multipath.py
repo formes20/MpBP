@@ -189,6 +189,7 @@ class PerturbationLpNorm(Perturbation):
             else:
                 assert extra_constr is None
                 x = x.reshape(x.shape[0], -1, 1)
+                x = x.unsqueeze(1).repeat(1, 4, 1, 1)
                 if not isinstance(A, eyeC):
                     # Find the upper and lower bounds via dual norm.
                     deviation = A.norm(self.dual_norm, -1) * self.eps

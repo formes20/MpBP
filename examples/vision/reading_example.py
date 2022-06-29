@@ -49,7 +49,6 @@ reading_input = BoundedTensor(reading_input, ptb)
 
 
 # Compute bounds for final output
-# for method in ['IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)', 'CROWN-Optimized (alpha-CROWN)']:
 for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)', 'backward (CROWN)']:
     print("Bounding method:", method)
     lb, ub = lirpa_model.compute_bounds(x=(reading_input,), method=method.split()[0])

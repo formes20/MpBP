@@ -3,9 +3,6 @@ import torch.nn as nn
 import torchvision
 import time
 
-# from multipath_bp import BoundedModule, BoundedTensor
-# from multipath_bp.perturbations import PerturbationLpNorm
-
 from multipath_bp.bound_general_multipath import BoundedModule
 from multipath_bp import BoundedTensor
 from multipath_bp.perturbations_multipath import PerturbationLpNorm
