@@ -5,7 +5,7 @@ with open('../examples/vision/data/cifar-10-batches-py/test_batch', 'rb') as f1:
     print(dict[b'data'][:5])
 
     with open('./cifar_test_first200.csv', 'w') as f2:
-        for index in range(200):
+        for index in range(600, 700):
             image = dict[b'data'][index]
             label = dict[b'labels'][index]
 
