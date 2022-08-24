@@ -3,7 +3,7 @@
 ![mpbp](./mpbp_poster.png)
 
 Given an input region (often infinite perturbed input set) and a neural network *f*, 
-*Bound propagation* methods propagate the input region along the
+*bound propagation* methods propagate the input region along the
 neural network to compute a bound function for each neuron,
 thus the output neuron *f*.
 The provable bounds of *f*
