@@ -1,4 +1,4 @@
-# MpBP: Verifying Robustness of Neural Networks with Multi-Path Bound Propagation
+# MpBP: Verifying Robustness of Neural Networks with Multi-path Bound Propagation
 
 ![mpbp](./mpbp_poster.png)
 
