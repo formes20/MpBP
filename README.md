@@ -1,5 +1,7 @@
 # MpBP: Verifying Robustness of Neural Networks with Multi-path Bound Propagation
 
+The FSE slides is [here](./FSE_speech.pdf).
+
 ![mpbp](./mpbp_poster.png)
 
 Given an input region (often infinite perturbed input set) and a neural network *f*, 
