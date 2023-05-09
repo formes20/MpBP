@@ -1,6 +1,7 @@
 # MpBP: Verifying Robustness of Neural Networks with Multi-path Bound Propagation
 
-The FSE slides is [here](./FSE_speech.pdf).
+**The FSE slides can be downloaded [here](./FSE_speech.pdf).**
+
 
 ![mpbp](./mpbp_poster.png)
 
@@ -46,7 +47,7 @@ Besides `torch`, MpBP only requires `numpy`, `packaging`, and `appdirs`.
 We provide a command line interface to MpBP, whose detailed usage is at Choice 1.
 For more flexible usage, scripts that invoke MpBP library are recommended, see Choice 2.
 
-### Choice 1. Command Line 
+### Choice 1. Command Line (for Demonstration)
 
 ```bash
 $ python mpbp.py  --net <filename> --spec <spec file> --path <path number> \
