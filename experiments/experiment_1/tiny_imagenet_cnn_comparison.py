@@ -57,7 +57,7 @@ model.load_state_dict(checkpoint)
 
 ### Step 2: Prepare dataset as usual
 # normalize = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975], std=[0.2302, 0.2265, 0.2262])
-test_data = torchvision.datasets.ImageFolder('/data/zhengye/LiRPA_new/experiments/experiment_2/tiny-imagenet-200/val',
+test_data = torchvision.datasets.ImageFolder('/data1/zhengye/MultipathBP/experiments/experiment_1/tiny-imagenet-200/val',
                                 transform=transforms.Compose([
                                     # transforms.RandomHorizontalFlip(),
                                     transforms.CenterCrop(56),
@@ -100,7 +100,7 @@ for i in range(2000):
     C.scatter_(dim=2, index=target_labels, value=-1.0)
     # print('Computing bounds with a specification matrix:\n', C)
 
-    method = 'backward'
+    method = 'forward'
     begin_time = time.time()
     lb, ub = lirpa_model.compute_bounds(x=(image,), method=method.split()[0], C=C)
     if torch.min(lb, dim=1)[0][0] >= 0:

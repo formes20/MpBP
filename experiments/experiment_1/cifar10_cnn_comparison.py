@@ -4,12 +4,12 @@ import torchvision
 import torchvision.transforms as transforms
 import time
 
-# from multipath_bp import BoundedModule, BoundedTensor
-# from multipath_bp.perturbations import PerturbationLpNorm
+from multipath_bp import BoundedModule, BoundedTensor
+from multipath_bp.perturbations import PerturbationLpNorm
 
-from multipath_bp.bound_general_multipath import BoundedModule
-from multipath_bp import BoundedTensor
-from multipath_bp.perturbations_multipath import PerturbationLpNorm
+# from multipath_bp.bound_general_multipath import BoundedModule
+# from multipath_bp import BoundedTensor
+# from multipath_bp.perturbations_multipath import PerturbationLpNorm
 
 ### Step 1: Define computational graph
 class Flatten(nn.Module):
@@ -61,15 +61,15 @@ test_data = torchvision.datasets.CIFAR10("../../examples/vision/data", train=Fal
                                          transform=transforms.Compose([transforms.ToTensor()]))
 n_classes = 10
 
-for i in range(131):
+for i in range(15):
     # Adjust to model input shape!!!
     image = test_data[i][0].reshape(-1, 3, 32, 32)
     # Convert to float between 0. and 1.
     true_label = torch.tensor(test_data.targets[i])
 
-    # if torch.cuda.is_available():
-    #     image = image.cuda()
-    #     model = model.cuda()
+    if torch.cuda.is_available():
+        image = image.cuda()
+        model = model.cuda()
 
     ### Step 3: wrap model with MultipathBP.
     # The second parameter is for constructing the trace of the computational graph, and its content is not important.
@@ -98,7 +98,7 @@ for i in range(131):
 
     begin_time = time.time()
 
-    method = 'backward'
+    method = 'forward+backward'
     lb, ub = lirpa_model.compute_bounds(x=(image,), method=method.split()[0], C=C)
     if torch.min(lb, dim=1)[0][0] >= 0:
         print('Verified')

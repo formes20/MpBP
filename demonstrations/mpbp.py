@@ -17,7 +17,7 @@ from specfication import Specification
 
 parser = argparse.ArgumentParser(description='Multipath Usage List')
 parser.add_argument('--net', type=str, default='./mnist_ffnn.pth', help='give the DNN model to be verified.')
-parser.add_argument('--spec', type=str, default='./specificaiton.py', help='give a specificaiton file.')
+parser.add_argument('--spec', type=str, default='./specification.py', help='give a specification file.')
 parser.add_argument('--path', type=int, default=4, help='give the number of propagation paths.')
 parser.add_argument('--bp', type=str, default='bbp', help='choose a bound propagation method.')
 parser.add_argument('--verbose', default=False, help='output verbose information (default no).')

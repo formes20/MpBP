@@ -78,7 +78,7 @@ C.scatter_(dim=2, index=target_labels, value=-1.0)
 # print('Computing bounds with a specification matrix:\n', C)
 
 # for method in ['forward', 'IBP', 'IBP+backward (CROWN-IBP)']:
-method ='backward'
+method ='forward'
 print("Bounding method:", method)
 time_begin = time.time()
 
